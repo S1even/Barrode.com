@@ -1,22 +1,59 @@
 const mongoose = require("mongoose");
 
-const postSchema = mongoose.Schema(
+const postSchema = new mongoose.Schema(
     {
-        message: {
-            type: String,
-            required: true,
-        },
-        author: {
+        posterId: {
             type: String,
             required: true
         },
+        message: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 500,
+        },
+        picture: {
+            type: String,
+        },
+        author: {
+            type: String,
+            required: false,
+            trim: true,
+        },
         likers: {
-            type: [String]
-        }
+            type: [String],
+            default: [],
+        },
+        comments: {
+            type: [
+                {
+                    commenterId: String,
+                    commenterPseudo: String,
+                    text: String,
+                    timestamp: Number,
+                }
+            ],
+            required: true,
+        },
+        path: {
+            type: [[Number]],
+            default: [],
+            validate: {
+                validator: function (value) {
+                    return value.every(coord => coord.length === 2);
+                },
+                message: "Chaque point du tracé doit contenir [latitude, longitude].",
+            },
+        },
+        totalDistance: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
     },
     {
         timestamps: true,
     }
 );
 
-module.exports = mongoose.model('post', postSchema)
+module.exports = mongoose.model("Post", postSchema);

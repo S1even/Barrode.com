@@ -1,13 +1,17 @@
 const router = require("express").Router();
 const passport = require("passport");
 
-// Démarre l'auth Google
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-
-// Callback après autorisation
-router.get("/google/callback", passport.authenticate("google", {
-  successRedirect: "/home", // ou ta page principale
-  failureRedirect: "/login"
+router.get("/google", passport.authenticate("google", {
+  scope: ["profile", "email"],
+  accessType: "offline",
+  prompt: "consent"
 }));
+
+router.get("/google/callback", passport.authenticate("google", {
+  failureRedirect: "/login",
+  session: true
+}), (req, res) => {
+  res.redirect(process.env.CLIENT_URL);
+});
 
 module.exports = router;

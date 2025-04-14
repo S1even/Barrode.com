@@ -1,5 +1,6 @@
 {
   "name": "frontend",
+  "homepage": "/login",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -12,8 +13,12 @@
     "node-sass": "^7.0.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.5.0",
     "react-scripts": "5.0.1",
+    "redux": "^5.0.1",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "^3.1.0",
     "styled-components": "^6.1.17",
     "web-vitals": "^2.1.4"
   },

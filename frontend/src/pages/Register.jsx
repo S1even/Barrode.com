@@ -6,7 +6,7 @@ import Image from '../styles/assets/img/BanniereBarrode.png'
 import FormRegister from '../components/FormRegister'
 import ButtonGoogleRegister from '../components/BouttonGoogleRegister'
 
-const Home = () => {
+const Register = () => {
   return (
     <div className="home-container">
       <img src={Image} alt="Image Headder" className="image-class" />
@@ -18,4 +18,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Register;

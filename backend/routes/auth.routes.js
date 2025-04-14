@@ -11,7 +11,7 @@ router.get("/google/callback", passport.authenticate("google", {
   failureRedirect: "/login",
   session: true
 }), (req, res) => {
-  res.redirect(process.env.CLIENT_URL);
+  res.redirect("http://localhost:3000/feed");
 });
 
 module.exports = router;

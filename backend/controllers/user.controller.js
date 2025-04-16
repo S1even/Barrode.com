@@ -1,10 +1,63 @@
 const UserModel = require("../models/user.model");
 const ObjectID = require("mongoose").Types.ObjectId;
+const jwt = require("jsonwebtoken");
 
 module.exports.getAllUsers = async (req, res) => {
     const users = await UserModel.find().select("-password");
     res.status(200).json(users);
 }
+
+module.exports.loginUser = async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await UserModel.findOne({ email });
+  
+      if (!user || !(await user.comparePassword(password))) {
+        return res.status(401).json({ message: "Identifiants invalides" });
+      }
+  
+      // Générer un access token
+      const token = jwt.sign(
+        { id: user._id },
+        process.env.TOKEN_SECRET,
+        { expiresIn: "15m" }
+      );
+  
+      // Stocker le token dans un cookie httpOnly
+      res.cookie("jwt", token, {
+        httpOnly: true,
+        maxAge: 15 * 60 * 1000, // 15 minutes en millisecondes
+        secure: process.env.NODE_ENV === "production", // true en production
+        sameSite: "strict"
+      });
+  
+      // Générer un refresh token
+      const refreshToken = jwt.sign(
+        { id: user._id },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
+      );
+  
+      // Stocker le refresh token dans un cookie
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours en millisecondes
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict"
+      });
+  
+      // Retourner l'utilisateur
+      res.status(200).json({
+        user: {
+          id: user._id,
+          pseudo: user.pseudo,
+        }
+      });
+    } catch (error) {
+      console.error("Erreur lors de la connexion :", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  };
 
 module.exports.userInfo = async (req, res) => {
     console.log(req.params);
@@ -23,6 +76,20 @@ module.exports.userInfo = async (req, res) => {
         res.status(500).send("Server error");
     }
 };
+
+// Function Getme
+module.exports.getMe = async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.user._id).select("-password");
+        if (!user) {
+            return res.status(404).json({ error: "Utilisateur non trouvé" });
+        }
+        res.status(200).json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 
 module.exports.updateUser = async (req, res) => {
     console.log(req.params);
@@ -103,13 +170,10 @@ module.exports.follow = async (req, res) => {
     }
 };
 
-
 module.exports.unfollow = async (req, res) => {
     if (!ObjectID.isValid(req.params.id) || !ObjectID.isValid(req.body.idToUnFollow)) {
         return res.status(400).json({ message: "Invalid user ID" });
     }
-    if (!ObjectID.isValid(req.params.id))
-        return res.status(400).send("ID unknow : " + req.params.id)
 
     try {
         // pull follower list
@@ -139,3 +203,43 @@ module.exports.unfollow = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+module.exports.logoutUser = (req, res) => {
+    res.clearCookie("jwt");
+    res.status(200).json({ message: "Déconnexion réussie" });
+  };
+
+  module.exports.refreshToken = async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+  
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token manquant" });
+    }
+  
+    try {
+      const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      
+      // Générer un nouveau token
+      const newToken = jwt.sign(
+        { id: decoded.id },
+        process.env.TOKEN_SECRET,
+        { expiresIn: "15m" } // Durée de validité du nouveau token
+      );
+  
+      // Réponse avec un nouveau cookie contenant le JWT
+      res.cookie("jwt", newToken, {
+        httpOnly: true, // Empêche l'accès côté client
+        maxAge: 15 * 60 * 1000, // 15 minutes
+        secure: process.env.NODE_ENV === "production", // Sécurisé en production (https)
+        sameSite: "strict" // Empêche l'envoi de cookies dans des requêtes inter-domaines
+      });
+  
+      res.status(200).json({ message: "Token rafraîchi avec succès" });
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement du token :", error);
+      res.clearCookie("jwt"); // Nettoyer les cookies
+      res.clearCookie("refreshToken");
+      res.status(403).json({ message: "Token invalide" });
+    }
+  };
+  

@@ -1,20 +1,25 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { UPLOAD_PICTURE } from "../../actions/user.actions";
+import { uploadPicture } from "../../actions/user.actions";
 
 const UploadImg = () => {
   const [file, setFile] = useState();
   const dispatch = useDispatch();
-  const userData = useSelector((state) => state.userReducer);
+  const userData = useSelector((state) => state.userReducer.user);
 
   const handlePicture = (e) => {
     e.preventDefault();
+    if (!userData._id) {
+      console.error("ID utilisateur non disponible");
+      return;
+    }
+    
     const data = new FormData();
     data.append("name", userData.pseudo);
     data.append("userId", userData._id);
     data.append("file", file);
 
-    dispatch(UPLOAD_PICTURE(data, userData._id));
+    dispatch(uploadPicture(data, userData._id));
   };
 
   return (

@@ -1,14 +1,18 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logoutUser } from '../actions/user.actions';
 
 const Button = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-    const handleLogout = () => {
-      localStorage.removeItem('token');
-      navigate('/login');
-    };
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    navigate('/login');
+  };
+  
   return (
     <StyledWrapper>
       <div className="button-container">

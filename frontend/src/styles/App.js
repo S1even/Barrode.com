@@ -3,7 +3,7 @@ import Routes from "./components/Routes";
 import { UidContext } from "./components/AppContext";
 import axios from "axios";
 import { useDispatch } from "react-redux";
-import { getUser } from "./actions/user.actions";
+import { getUser } from "../actions/user.actions";
 
 const App = () => {
   const [uid, setUid] = useState(null);
@@ -11,16 +11,17 @@ const App = () => {
 
   useEffect(() => {
     const fetchToken = async () => {
-      await axios({
-        method: "get",
-        url: `${process.env.REACT_APP_API_URL}jwtid`,
-        withCredentials: true,
-      })
-        .then((res) => {
-          setUid(res.data);
-        })
-        .catch((err) => console.log("No token"));
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}jwtid`, {
+          withCredentials: true,
+        });
+        setUid(res.data);
+        dispatch(checkUserLoggedIn());
+      } catch (err) {
+        console.log("No token");
+      }
     };
+  
     fetchToken();
 
     if (uid) dispatch(getUser(uid));

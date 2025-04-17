@@ -1,89 +1,131 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import UploadImg from "./UploadImg";
-import { UPDATE_BIO } from "../../actions/user.actions";
+import { updateBio } from "../../actions/user.actions";
 import { dateParser } from "../Utils";
 import FollowHandler from "./FollowHandler";
-
+import UploadImg from "./UploadImg";
 
 const UpdateProfil = () => {
   const [bio, setBio] = useState("");
   const [updateForm, setUpdateForm] = useState(false);
-  const userData = useSelector((state) => state.userReducer);
-  const usersData = useSelector((state) => state.usersReducer);
-  const error = useSelector((state) => state.errorReducer.userError);
-  const dispatch = useDispatch();
   const [followingPopup, setFollowingPopup] = useState(false);
   const [followersPopup, setFollowersPopup] = useState(false);
 
+  const dispatch = useDispatch();
+  
+  const { user, error } = useSelector((state) => state.userReducer);
+  const users = useSelector((state) => state.userReducer.users);
+
+  useEffect(() => {
+    if (user?.bio) {
+      setBio(user.bio);
+    }
+  }, [user?.bio]);
+
   const handleUpdate = () => {
-    dispatch(UPDATE_BIO(userData._id, bio));
-    setUpdateForm(false);
+    if (bio !== user?.bio) {
+      dispatch(updateBio(user._id, bio));
+      setUpdateForm(false);
+    }
   };
+
+  if (!user) {
+    return <div className="profil-container">Utilisateur non trouvé</div>;
+  }
 
   return (
     <div className="profil-container">
-      <h1> Profil de {userData.pseudo}</h1>
+      <h1>Profil de {user.pseudo || "l'utilisateur"}</h1>
       <div className="update-container">
         <div className="left-part">
           <h3>Photo de profil</h3>
-          <img src={userData.picture} alt="user-pic" />
+          {user.picture && (
+            <img 
+              src={user.picture} 
+              alt="user-pic" 
+              className="profile-picture"
+              onError={(e) => {
+                e.target.src = "./public/img/uploads/profil/random-user.png";
+              }}
+            />
+          )}
           <UploadImg />
-          <p>{error.maxSize}</p>
-          <p>{error.format}</p>
+          {error?.maxSize && <p className="error">{error.maxSize}</p>}
+          {error?.format && <p className="error">{error.format}</p>}
         </div>
         <div className="right-part">
           <div className="bio-update">
             <h3>Bio</h3>
-            {updateForm === false && (
+            {!updateForm ? (
               <>
-                <p onClick={() => setUpdateForm(!updateForm)}>{userData.bio}</p>
-                <button onClick={() => setUpdateForm(!updateForm)}>
+                <p onClick={() => setUpdateForm(true)}>
+                  {user.bio || "Aucune bio pour le moment"}
+                </p>
+                <button 
+                  onClick={() => setUpdateForm(true)}
+                  className="button update-btn"
+                >
                   Modifier bio
                 </button>
               </>
-            )}
-            {updateForm && (
+            ) : (
               <>
                 <textarea
-                  type="text"
-                  defaultValue={userData.bio}
+                  defaultValue={bio}
                   onChange={(e) => setBio(e.target.value)}
-                ></textarea>
-                <button onClick={handleUpdate}>Valider modifications</button>
+                  className="bio-textarea"
+                />
+                <button 
+                  onClick={handleUpdate}
+                  className="button validate-btn"
+                >
+                  Valider modifications
+                </button>
               </>
             )}
           </div>
-          <h4>Membre depuis le : {dateParser(userData.createdAt)}</h4>
-          <h5 onClick={() => setFollowingPopup(true)}>
-            Abonnements : {userData.following ? userData.following.length : ""}
-          </h5>
-          <h5 onClick={() => setFollowersPopup(true)}>
-            Abonnés : {userData.followers ? userData.followers.length : ""}
-          </h5>
+          <div className="user-info">
+            <h4>Membre depuis le : {user.createdAt && dateParser(user.createdAt)}</h4>
+            <div className="user-follow">
+              <h5 onClick={() => setFollowingPopup(true)}>
+                Abonnements : {user.following?.length || 0}
+              </h5>
+              <h5 onClick={() => setFollowersPopup(true)}>
+                Abonnés : {user.followers?.length || 0}
+              </h5>
+            </div>
+          </div>
         </div>
       </div>
+
       {followingPopup && (
         <div className="popup-profil-container">
           <div className="modal">
             <h3>Abonnements</h3>
-            <span className="cross" onClick={() => setFollowingPopup(false)}>
+            <span 
+              className="cross" 
+              onClick={() => setFollowingPopup(false)}
+            >
               &#10005;
             </span>
             <ul>
-              {usersData.map((user) => {
-                for (let i = 0; i < userData.following.length; i++) {
-                  if (user._id === userData.following[i]) {
-                    return (
-                      <li key={user._id}>
-                        <img src={user.picture} alt="user-pic" />
-                        <h4>{user.pseudo}</h4>
-                        <div className="follow-handler">
-                          <FollowHandler idToFollow={user._id} type={'suggestion'} />
-                        </div>
-                      </li>
-                    );
-                  } 
+              {users.map((followedUser) => {
+                if (user.following?.includes(followedUser._id)) {
+                  return (
+                    <li key={followedUser._id}>
+                      <img 
+                        src={followedUser.picture || "/img/default-avatar.png"} 
+                        alt="user-pic" 
+                      />
+                      <h4>{followedUser.pseudo}</h4>
+                      <div className="follow-handler">
+                        <FollowHandler 
+                          idToFollow={followedUser._id} 
+                          type="suggestion" 
+                        />
+                      </div>
+                    </li>
+                  );
                 }
                 return null;
               })}
@@ -91,27 +133,35 @@ const UpdateProfil = () => {
           </div>
         </div>
       )}
+
       {followersPopup && (
         <div className="popup-profil-container">
           <div className="modal">
             <h3>Abonnés</h3>
-            <span className="cross" onClick={() => setFollowersPopup(false)}>
+            <span 
+              className="cross" 
+              onClick={() => setFollowersPopup(false)}
+            >
               &#10005;
             </span>
             <ul>
-              {usersData.map((user) => {
-                for (let i = 0; i < userData.followers.length; i++) {
-                  if (user._id === userData.followers[i]) {
-                    return (
-                      <li key={user._id}>
-                        <img src={user.picture} alt="user-pic" />
-                        <h4>{user.pseudo}</h4>
-                        <div className="follow-handler">
-                          <FollowHandler idToFollow={user._id} type={'suggestion'} />
-                        </div>
-                      </li>
-                    );
-                  }
+              {users.map((follower) => {
+                if (user.followers?.includes(follower._id)) {
+                  return (
+                    <li key={follower._id}>
+                      <img 
+                        src={follower.picture || "/img/default-avatar.png"} 
+                        alt="user-pic" 
+                      />
+                      <h4>{follower.pseudo}</h4>
+                      <div className="follow-handler">
+                        <FollowHandler 
+                          idToFollow={follower._id} 
+                          type="suggestion" 
+                        />
+                      </div>
+                    </li>
+                  );
                 }
                 return null;
               })}

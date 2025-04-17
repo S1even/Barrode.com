@@ -2,15 +2,21 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { Provider } from "react-redux";
-import { createStore, applyMiddleware } from "redux";
+import { configureStore } from "@reduxjs/toolkit";
 import { thunk } from "redux-thunk";
 import rootReducer from "./reducers";
 import { getUsers } from "./actions/user.actions";
 import { getPosts } from "./actions/post.actions";
 import { BrowserRouter } from "react-router-dom";
+import { checkUserLoggedIn } from "./actions/user.actions";
 
-const store = createStore(rootReducer, applyMiddleware(thunk));
+const store = configureStore({
+  reducer: rootReducer,
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(thunk),
+});
+
 store.dispatch(getUsers());
+store.dispatch(checkUserLoggedIn());
 store.dispatch(getPosts());
 
 const container = document.getElementById("root");

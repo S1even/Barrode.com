@@ -1,81 +1,77 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { loginUser } from '../actions/user.actions';
 import { useNavigate } from 'react-router-dom';
 
 const Form = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const navigate = useNavigate(); // Hook initialisation
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/user/login`,
-        { email, password },
-        { withCredentials: true }
-      );
-      console.log('Connexion réussie :', response.data);
-
-      // Feed redirection
+      await dispatch(loginUser(email, password));
+      console.log('Connexion réussie');
       navigate('/feed');
     } catch (error) {
       console.error('Erreur lors de la connexion :', error);
-      setErrorMessage(error.response?.data?.message || 'Une erreur est survenue.');
+      setErrorMessage(error.response?.data?.message || 'Email ou mot de passe incorrect');
     }
   };
 
   return (
     <StyledWrapper>
-    <div className="form-container">
-      <p className="title">S'identifer</p>
-      <form className="form" onSubmit={handleSubmit}>
-        {/* E-mail */}
-        <div className="input-group">
-          <label htmlFor="email">E-mail</label>
-          <input
-            type="text"
-            name="email"
-            id="email"
-            placeholder="Entrez votre email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        {/* Password */}
-        <div className="input-group">
-          <label htmlFor="password">Mot de passe</label>
-          <input
-            type="password"
-            name="password"
-            id="password"
-            placeholder="Entrez votre mot de passe"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+      <div className="form-container">
+        <p className="title">S'identifer</p>
+        <form className="form" onSubmit={handleSubmit}>
+          {/* E-mail */}
+          <div className="input-group">
+            <label htmlFor="email">E-mail</label>
+            <input
+              type="text"
+              name="email"
+              id="email"
+              placeholder="Entrez votre email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          {/* Password */}
+          <div className="input-group">
+            <label htmlFor="password">Mot de passe</label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              placeholder="Entrez votre mot de passe"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
-        <button className="sign" type="submit">
-          Se connecter
-        </button>
-        
-        {/* Error message */}
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
-      </form>
+          <button className="sign" type="submit">
+            Se connecter
+          </button>
+          
+          {/* Error message */}
+          {errorMessage && <p className="error-message">{errorMessage}</p>}
+        </form>
 
-      <div className="social-message">
-        <div className="line" />
-        <p className="message">Ou</p>
-        <div className="line" />
+        <div className="social-message">
+          <div className="line" />
+          <p className="message">Ou</p>
+          <div className="line" />
+        </div>
+        <p className="signup">
+          Vous ne possédez pas de compte ?
+          <a rel="noopener noreferrer" href="/register" className="link"> Crée un compte</a>
+        </p>
       </div>
-      <p className="signup">
-        Vous ne possédez pas de compte ?
-        <a rel="noopener noreferrer" href="/register" className="link"> Crée un compte</a>
-      </p>
-    </div>
-  </StyledWrapper>
+    </StyledWrapper>
   );
 };
 
@@ -89,7 +85,7 @@ const StyledWrapper = styled.div`
     border-radius: 0.75rem;
     background-color: #f7f7f7;
     padding: 2rem;
-    color: #333; /* dark gray text */
+    color: #333;
   }
 
   .title {
@@ -97,7 +93,7 @@ const StyledWrapper = styled.div`
     font-size: 1.5rem;
     line-height: 2rem;
     font-weight: 700;
-    color: #00698f; /* blue title */
+    color: #00698f;
   }
 
   .form {
@@ -112,22 +108,22 @@ const StyledWrapper = styled.div`
 
   .input-group label {
     display: block;
-    color: #666; /* dark gray label */
+    color: #666;
     margin-bottom: 4px;
   }
 
   .input-group input {
     width: 100%;
     border-radius: 0.375rem;
-    border: 1px solid #ccc; /* light gray border */
+    border: 1px solid #ccc;
     outline: 0;
-    background-color: #f7f7f7; /* light gray background */
+    background-color: #f7f7f7;
     padding: 0.75rem 1rem;
-    color: #333; /* dark gray text */
+    color: #333;
   }
 
   .input-group input:focus {
-    border-color: #00698f; /* blue border on focus */
+    border-color: #00698f;
   }
 
   .forgot {
@@ -135,29 +131,29 @@ const StyledWrapper = styled.div`
     justify-content: flex-end;
     font-size: 0.75rem;
     line-height: 1rem;
-    color: #666; /* dark gray forgot password */
+    color: #666;
     margin: 8px 0 14px 0;
   }
 
   .forgot a,
   .signup a {
-    color: #333; /* dark gray link */
+    color: #333;
     text-decoration: none;
     font-size: 14px;
   }
 
   .forgot a:hover,
   .signup a:hover {
-    text-decoration: underline #00698f; /* blue underline on hover */
+    text-decoration: underline #00698f;
   }
 
   .sign {
     display: block;
     width: 100%;
-    background-color: #00698f; /* blue button */
+    background-color: #00698f;
     padding: 0.75rem;
     text-align: center;
-    color: #fff; /* white text */
+    color: #fff;
     border: none;
     border-radius: 0.375rem;
     font-weight: 600;
@@ -173,7 +169,7 @@ const StyledWrapper = styled.div`
   .line {
     height: 1px;
     flex: 1 1 0%;
-    background-color: #ccc; /* light gray line */
+    background-color: #ccc;
   }
 
   .social-message .message {
@@ -181,7 +177,7 @@ const StyledWrapper = styled.div`
     padding-right: 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: #666; /* dark gray social message */
+    color: #666;
   }
 
   .social-icons {
@@ -200,7 +196,7 @@ const StyledWrapper = styled.div`
   .social-icons .icon svg {
     height: 1.25rem;
     width: 1.25rem;
-    fill: #fff; /* white icon */
+    fill: #fff;
   }
 
   .signup {
@@ -210,7 +206,7 @@ const StyledWrapper = styled.div`
     text-align: center;
     font-size: 0.75rem;
     line-height: 1rem;
-    color: #666; /* dark gray signup */
+    color: #666;
   }`;
 
 export default Form;

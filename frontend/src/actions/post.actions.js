@@ -20,16 +20,25 @@ export const GET_TRENDS = "GET_TRENDS";
 // errors
 export const GET_POST_ERRORS = "GET_POST_ERRORS";
 
-export const getPosts = (num) => {
-  return (dispatch) => {
-    return axios
-      .get(`${process.env.REACT_APP_API_URL}api/post/`)
-      .then((res) => {
-        const array = res.data.slice(0, num);
-        dispatch({ type: GET_POSTS, payload: array });
-        dispatch({ type: GET_ALL_POSTS, payload: res.data });
-      })
-      .catch((err) => console.log(err));
+export const getPosts = (page = 1, limit = 5) => {
+  return async (dispatch) => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/post?page=${page}&limit=${limit}`
+      );
+      
+      console.log(`API response page ${page}:`, res.data);
+      
+      if (res.data && res.data.length > 0) {
+        dispatch({ type: GET_POSTS, payload: res.data });
+        return res.data;
+      } else {
+        return [];
+      }
+    } catch (err) {
+      console.error("Erreur lors de la récupération des posts:", err);
+      return [];
+    }
   };
 };
 

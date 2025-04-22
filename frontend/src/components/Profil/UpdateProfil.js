@@ -13,45 +13,53 @@ const UpdateProfil = () => {
 
   const dispatch = useDispatch();
   
-  const { user, error } = useSelector((state) => state.userReducer);
+  const userData = useSelector((state) => state.userReducer.user);
   const users = useSelector((state) => state.userReducer.users);
+  const error = useSelector((state) => state.userReducer.error);
+
+  const defaultProfileImage = "/img/random-user.png";
 
   useEffect(() => {
-    if (user?.bio) {
-      setBio(user.bio);
+    if (userData?.bio) {
+      setBio(userData.bio);
     }
-  }, [user?.bio]);
+  }, [userData?.bio]);
 
   const handleUpdate = () => {
-    if (bio !== user?.bio) {
-      dispatch(updateBio(user._id, bio));
+    if (userData?._id && bio !== userData?.bio) {
+      dispatch(updateBio(userData._id, bio));
       setUpdateForm(false);
     }
   };
 
-  if (!user) {
-    return <div className="profil-container">Utilisateur non trouvé</div>;
+  if (!userData) {
+    return <div className="profil-container">Chargement du profil...</div>;
   }
 
   return (
     <div className="profil-container">
-      <h1>Profil de {user.pseudo || "l'utilisateur"}</h1>
+      <h1>Profil de {userData.pseudo || "l'utilisateur"}</h1>
       <div className="update-container">
         <div className="left-part">
           <h3>Photo de profil</h3>
-          {user.picture && (
+          {userData.picture ? (
             <img 
-              src={user.picture} 
+              src={userData.picture} 
               alt="user-pic" 
               className="profile-picture"
               onError={(e) => {
-                e.target.src = "./public/img/uploads/profil/random-user.png";
+                console.log("Erreur de chargement d'image, utilisation de l'image par défaut");
+                e.target.src = defaultProfileImage;
               }}
+            />
+          ) : (
+            <img 
+              src={defaultProfileImage} 
+              alt="default-user-pic" 
+              className="profile-picture"
             />
           )}
           <UploadImg />
-          {error?.maxSize && <p className="error">{error.maxSize}</p>}
-          {error?.format && <p className="error">{error.format}</p>}
         </div>
         <div className="right-part">
           <div className="bio-update">
@@ -59,7 +67,7 @@ const UpdateProfil = () => {
             {!updateForm ? (
               <>
                 <p onClick={() => setUpdateForm(true)}>
-                  {user.bio || "Aucune bio pour le moment"}
+                  {userData.bio || "Aucune bio pour le moment"}
                 </p>
                 <button 
                   onClick={() => setUpdateForm(true)}
@@ -71,7 +79,7 @@ const UpdateProfil = () => {
             ) : (
               <>
                 <textarea
-                  defaultValue={bio}
+                  value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   className="bio-textarea"
                 />
@@ -85,13 +93,13 @@ const UpdateProfil = () => {
             )}
           </div>
           <div className="user-info">
-            <h4>Membre depuis le : {user.createdAt && dateParser(user.createdAt)}</h4>
+            <h4>Membre depuis le : {userData.createdAt && dateParser(userData.createdAt)}</h4>
             <div className="user-follow">
               <h5 onClick={() => setFollowingPopup(true)}>
-                Abonnements : {user.following?.length || 0}
+                Abonnements : {userData.following?.length || 0}
               </h5>
               <h5 onClick={() => setFollowersPopup(true)}>
-                Abonnés : {user.followers?.length || 0}
+                Abonnés : {userData.followers?.length || 0}
               </h5>
             </div>
           </div>
@@ -109,13 +117,14 @@ const UpdateProfil = () => {
               &#10005;
             </span>
             <ul>
-              {users.map((followedUser) => {
-                if (user.following?.includes(followedUser._id)) {
+              {users?.map((followedUser) => {
+                if (userData.following?.includes(followedUser._id)) {
                   return (
                     <li key={followedUser._id}>
                       <img 
-                        src={followedUser.picture || "/img/default-avatar.png"} 
+                        src={followedUser.picture || defaultProfileImage} 
                         alt="user-pic" 
+                        onError={(e) => { e.target.src = defaultProfileImage; }}
                       />
                       <h4>{followedUser.pseudo}</h4>
                       <div className="follow-handler">
@@ -145,13 +154,14 @@ const UpdateProfil = () => {
               &#10005;
             </span>
             <ul>
-              {users.map((follower) => {
-                if (user.followers?.includes(follower._id)) {
+              {users?.map((follower) => {
+                if (userData.followers?.includes(follower._id)) {
                   return (
                     <li key={follower._id}>
                       <img 
-                        src={follower.picture || "/img/default-avatar.png"} 
-                        alt="user-pic" 
+                        src={follower.picture || defaultProfileImage} 
+                        alt="user-pic"
+                        onError={(e) => { e.target.src = defaultProfileImage; }}
                       />
                       <h4>{follower.pseudo}</h4>
                       <div className="follow-handler">

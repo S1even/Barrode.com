@@ -26,21 +26,16 @@ export const getPosts = (page = 1, limit = 5) => {
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}api/post?page=${page}&limit=${limit}`
       );
-      
-      console.log(`API response page ${page}:`, res.data);
-      
-      if (res.data && res.data.length > 0) {
-        dispatch({ type: GET_POSTS, payload: res.data });
-        return res.data;
-      } else {
-        return [];
-      }
+
+      dispatch({ type: GET_POSTS, payload: res.data });
+
+      return res.data; // nécessaire pour savoir s’il y a encore des posts
     } catch (err) {
-      console.error("Erreur lors de la récupération des posts:", err);
-      return [];
+      console.log(err);
     }
   };
 };
+
 
 export const addPost = (data) => {
   return (dispatch) => {

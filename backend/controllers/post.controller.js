@@ -73,22 +73,21 @@ module.exports.createPost = async (req, res) => {
 };
 
 module.exports.readPost = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
-    const skip = (page - 1) * limit;
-
-    const posts = await PostModel.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    res.status(200).json(posts);
-  } catch (err) {
-    console.error("Erreur lors de la récupération des posts:", err);
-    res.status(500).json({ message: "Erreur serveur" });
-  }
-};
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 5;
+      const skip = (page - 1) * limit;
+  
+      const posts = await PostModel.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+  
+      res.status(200).json(posts);
+    } catch (err) {
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  };
 
 module.exports.updatePost = async (req, res) => {
     if (!ObjectID.isValid(req.params.id))

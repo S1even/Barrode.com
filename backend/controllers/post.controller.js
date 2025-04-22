@@ -1,8 +1,6 @@
 const PostModel = require('../models/post.model');
 const UserModel = require('../models/user.model');
 const ObjectID = require("mongoose").Types.ObjectId;
-const fs = require('fs');
-const path = require('path');
 const { uploadErrors } = require('../utils/errors.utils');
 
 const calculateDistance = (coord1, coord2) => {
@@ -23,25 +21,27 @@ const calculateDistance = (coord1, coord2) => {
 };
 
 module.exports.createPost = async (req, res) => {
-    let fileName = "";
+    let imageData = "";
 
     try {
-        if (req.file != null) {
-            if (!req.file.mimetype.match(/^image\/(jpeg|png)$/))
+        // Traitement de l'image si elle existe
+        if (req.file) {
+            // Vérification du type de fichier
+            if (!req.file.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
                 throw new Error("invalid file");
+            }
 
-            if (req.file.size > 10000000) throw new Error("max size");
+            // Vérification de la taille du fichier (10MB max)
+            if (req.file.size > 10000000) {
+                throw new Error("max size");
+            }
 
-            fileName = req.body.posterId + Date.now() + '.jpg';
-            const uploadPath = path.join(__dirname, "../uploads/posts");
-            if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
-
-            await fs.promises.writeFile(
-                path.join(uploadPath, fileName),
-                req.file.buffer
-            );
+            // Conversion de l'image en base64
+            const imageBuffer = req.file.buffer;
+            imageData = `data:${req.file.mimetype};base64,${imageBuffer.toString('base64')}`;
         }
 
+        // Traitement des données de chemin (path)
         const pathData = JSON.parse(req.body.path || "[]");
         let totalDistance = 0;
 
@@ -51,10 +51,11 @@ module.exports.createPost = async (req, res) => {
             }
         }
 
+        // Création du nouveau post avec l'image en base64
         const post = new PostModel({
             posterId: req.body.posterId,
             message: req.body.message,
-            picture: req.file != null ? "./uploads/posts/" + fileName : "",
+            picture: imageData, // Image en base64 au lieu du chemin du fichier
             video: req.body.video,
             likers: [],
             comments: [],
@@ -65,18 +66,28 @@ module.exports.createPost = async (req, res) => {
         const newPost = await post.save();
         res.status(201).json(newPost);
     } catch (err) {
+        console.error("Erreur lors de la création du post:", err);
         const errors = uploadErrors(err);
         res.status(400).json({ errors });
     }
 };
 
 module.exports.readPost = async (req, res) => {
-    try {
-        const read = await PostModel.find().sort({ createdAt: -1 });
-        res.status(200).json(read);
-    } catch (err) {
-        console.log("Error to get data: " + err);
-    }
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const posts = await PostModel.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json(posts);
+  } catch (err) {
+    console.error("Erreur lors de la récupération des posts:", err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
 };
 
 module.exports.updatePost = async (req, res) => {
@@ -84,14 +95,36 @@ module.exports.updatePost = async (req, res) => {
         return res.status(400).send('ID unknown: ' + req.params.id);
 
     try {
+        const updateData = { message: req.body.message };
+        
+        // Si une nouvelle image est fournie
+        if (req.file) {
+            // Vérification du type de fichier
+            if (!req.file.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
+                throw new Error("invalid file");
+            }
+
+            // Vérification de la taille du fichier (10MB max)
+            if (req.file.size > 10000000) {
+                throw new Error("max size");
+            }
+
+            // Conversion de l'image en base64
+            const imageBuffer = req.file.buffer;
+            updateData.picture = `data:${req.file.mimetype};base64,${imageBuffer.toString('base64')}`;
+        }
+
         const postUpdate = await PostModel.findByIdAndUpdate(
             req.params.id,
-            { $set: { message: req.body.message } },
+            { $set: updateData },
             { new: true },
         );
+        
         res.status(200).json(postUpdate);
     } catch (err) {
         console.log("Update error: " + err);
+        const errors = uploadErrors(err);
+        res.status(400).json({ errors });
     }
 };
 
@@ -106,6 +139,7 @@ module.exports.deletePost = async (req, res) => {
         res.status(200).json({ message: "Successfully deleted." });
     } catch (err) {
         console.log("Delete error: " + err);
+        res.status(500).json({ message: "Erreur lors de la suppression du post" });
     }
 };
 

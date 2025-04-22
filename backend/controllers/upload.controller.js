@@ -1,6 +1,4 @@
 const UserModel = require('../models/user.model');
-const fs = require('fs');
-const path = require('path');
 const { uploadErrors } = require('../utils/errors.utils');
 
 module.exports.profilUpload = async (req, res) => {
@@ -18,24 +16,18 @@ module.exports.profilUpload = async (req, res) => {
         }
 
         if (req.file.size > 500000) {
-            throw new Error("File size exceeds the maximum allowed size of 10MB");
+            throw new Error("File size exceeds the maximum allowed size of 500KB");
         }
 
-        const fileName = req.body.name + ".jpg";
-        const uploadPath = path.join(__dirname, "../uploads/profil");
+        const imageBuffer = req.file.buffer;
+        const base64Image = `data:${req.file.mimetype};base64,${imageBuffer.toString('base64')}`;
 
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
-        }
-
-        await fs.promises.writeFile(
-            path.join(uploadPath, fileName),
-            req.file.buffer
-        );
-
+        // Update User Image
+        const userId = req.body.userId;
+        
         const userPicture = await UserModel.findByIdAndUpdate(
-            req.params.userId,
-            { $set: { picture: "./uploads/profil/" + fileName } },
+            userId,
+            { $set: { picture: base64Image } },
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
 
@@ -43,9 +35,13 @@ module.exports.profilUpload = async (req, res) => {
             return res.status(404).send("User not found");
         }
 
-        return res.status(200).json({ message: "File uploaded and user updated", user: userPicture });
+        return res.status(200).json({ 
+            message: "Profile picture updated successfully", 
+            user: userPicture 
+        });
 
     } catch (err) {
+        console.error("Error uploading profile picture:", err);
         const errors = uploadErrors(err);
         return res.status(400).json({ errors });
     }

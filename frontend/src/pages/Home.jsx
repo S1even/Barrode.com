@@ -9,7 +9,7 @@ import ButtonGoogle from '../components/ButtonGoogle';
 
 const Home = () => {
   return (
-    <div className="home-container">
+    <div className="home-containerHome">
       <img src={Image} alt="Image Headder" className="image-class" />
       <Cobe />
       <Form />

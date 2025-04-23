@@ -31,7 +31,7 @@ app.use("/auth", require("./routes/auth.routes"));
 const corsOptions = {
   origin: process.env.CLIENT_URL,
   credentials: true,
-  allowedHeaders: ['sessionId', 'Content-Type'],
+  allowedHeaders: ['sessionId', 'Content-Type',  'Authorization'],
   exposedHeaders: ['sessionId'],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   preflightContinue: false

@@ -1,72 +1,64 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getPosts } from "../actions/post.actions";
 import Card from "./Post/Card";
 import { isEmpty } from "./Utils";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const Thread = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const loadingRef = useRef(false);
-  
   const dispatch = useDispatch();
   const posts = useSelector((state) => state.postReducer);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const loadPosts = useCallback(async () => {
-    if (loadingRef.current || !hasMore) return;
-    
-    loadingRef.current = true;
+    console.log("loadPosts lancé pour page :", page);
     setIsLoading(true);
-    
-    console.log("Chargement de la page", page);
+
     const newPosts = await dispatch(getPosts(page, 5));
-    
-    setIsLoading(false);
-    loadingRef.current = false;
-    
-    if (!newPosts || newPosts.length === 0 || newPosts.length < 5) {
-      console.log("Plus de posts à charger");
+
+    if (!newPosts || newPosts.length < 5) {
       setHasMore(false);
+    } else {
+      setPage((prevPage) => prevPage + 1);
     }
-  }, [dispatch, page, hasMore]);
+
+    setIsLoading(false);
+  }, [dispatch, page]);
 
   useEffect(() => {
     loadPosts();
-  }, [page, loadPosts]);
-
-  const handleScroll = useCallback(() => {
-    const scrollPosition = window.scrollY + window.innerHeight;
-    const scrollThreshold = document.documentElement.scrollHeight - 200;
-    
-    if (scrollPosition >= scrollThreshold && !isLoading && hasMore && !loadingRef.current) {
-      console.log("Défilement détecté, chargement de la page suivante");
-      setPage(prevPage => prevPage + 1);
-    }
-  }, [isLoading, hasMore]);
+  }, [loadPosts]);
 
   useEffect(() => {
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+      if (scrollTop + clientHeight >= scrollHeight - 100 && hasMore && !isLoading) {
+        console.log("Scroll détecté en bas de page");
+        loadPosts();
+      }
+    };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
-
-  console.log("Nombre de posts actuellement dans Redux:", posts.length);
+  }, [hasMore, isLoading, loadPosts]);
 
   return (
     <div className="thread-container">
-      <ul>
-        {!isEmpty(posts) &&
-          posts.map((post) => <Card post={post} key={post._id} />)}
-      </ul>
-
-      {isLoading && (
-        <div className="loading-container">
-          <div className="loading">Chargement...</div>
-        </div>
-      )}
-
-      {!hasMore && posts.length > 0 && (
-        <div className="end-message">Vous avez vu tous les posts</div>
+      {!isEmpty(posts) && (
+        <InfiniteScroll
+          dataLength={posts.length}
+          next={loadPosts}
+          hasMore={hasMore}
+          loader={<div className="loading">Chargement...</div>}
+          endMessage={<div className="end-message">Tous les posts sont affichés</div>}
+        >
+          {posts.map((post) => (
+            <Card post={post} key={post._id} />
+          ))}
+        </InfiniteScroll>
       )}
     </div>
   );

@@ -2,8 +2,9 @@ const router = require('express').Router()
 const postController = require('../controllers/post.controller');
 const multer = require('multer');
 const upload = multer();
+const { requireAuth } = require('../middleware/auth.middleware');
 
-router.post('/', upload.single('file'),  postController.createPost);
+router.post('/', requireAuth, upload.single('picture'), postController.createPost);
 router.get('/', postController.readPost);
 router.put('/:id', postController.updatePost);
 router.delete('/:id', postController.deletePost);

@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Register from './pages/Register';
 import Feed from './pages/Feed';
 import Profil from './pages/Profil';
+import Trending from './pages/Trending';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/feed" element={<Feed />} />
       <Route path="/profil" element={<Profil />} />
+      <Route path="/trending" element={<Trending />} />
     </Routes>
   );
 }

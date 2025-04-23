@@ -23,25 +23,27 @@ const calculateDistance = (coord1, coord2) => {
 module.exports.createPost = async (req, res) => {
     let imageData = "";
 
+    const posterId = req.user._id;
+    
+    console.log("ID utilisateur authentifié:", posterId);
+
     try {
-        // Traitement de l'image si elle existe
+        if (!req.body.posterId || req.body.posterId === "undefined") {
+            throw new Error("posterId manquant ou invalide");
+        }
         if (req.file) {
-            // Vérification du type de fichier
             if (!req.file.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
                 throw new Error("invalid file");
             }
 
-            // Vérification de la taille du fichier (10MB max)
             if (req.file.size > 10000000) {
                 throw new Error("max size");
             }
 
-            // Conversion de l'image en base64
             const imageBuffer = req.file.buffer;
             imageData = `data:${req.file.mimetype};base64,${imageBuffer.toString('base64')}`;
         }
 
-        // Traitement des données de chemin (path)
         const pathData = JSON.parse(req.body.path || "[]");
         let totalDistance = 0;
 
@@ -50,12 +52,10 @@ module.exports.createPost = async (req, res) => {
                 totalDistance += calculateDistance(pathData[i - 1], pathData[i]);
             }
         }
-
-        // Création du nouveau post avec l'image en base64
         const post = new PostModel({
-            posterId: req.body.posterId,
+            posterId: posterId,
             message: req.body.message,
-            picture: imageData, // Image en base64 au lieu du chemin du fichier
+            picture: imageData,
             video: req.body.video,
             likers: [],
             comments: [],
@@ -81,13 +81,15 @@ module.exports.readPost = async (req, res) => {
       const posts = await PostModel.find()
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit);
+        .limit(limit)
+        .populate("posterId", "pseudo picture");
   
       res.status(200).json(posts);
     } catch (err) {
       res.status(500).json({ message: "Erreur serveur" });
     }
   };
+  
 
 module.exports.updatePost = async (req, res) => {
     if (!ObjectID.isValid(req.params.id))
@@ -96,14 +98,11 @@ module.exports.updatePost = async (req, res) => {
     try {
         const updateData = { message: req.body.message };
         
-        // Si une nouvelle image est fournie
         if (req.file) {
-            // Vérification du type de fichier
             if (!req.file.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
                 throw new Error("invalid file");
             }
 
-            // Vérification de la taille du fichier (10MB max)
             if (req.file.size > 10000000) {
                 throw new Error("max size");
             }

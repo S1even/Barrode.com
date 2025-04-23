@@ -20,6 +20,7 @@ export const GET_TRENDS = "GET_TRENDS";
 // errors
 export const GET_POST_ERRORS = "GET_POST_ERRORS";
 
+
 export const getPosts = (page = 1, limit = 5) => {
   return async (dispatch) => {
     try {
@@ -29,23 +30,35 @@ export const getPosts = (page = 1, limit = 5) => {
 
       dispatch({ type: GET_POSTS, payload: res.data });
 
-      return res.data; // nécessaire pour savoir s’il y a encore des posts
+      return res.data;
     } catch (err) {
       console.log(err);
     }
   };
 };
 
-
 export const addPost = (data) => {
   return (dispatch) => {
+    const token = localStorage.getItem("token");
+    
     return axios
-      .post(`${process.env.REACT_APP_API_URL}api/post/`, data)
+      .post(`${process.env.REACT_APP_API_URL}api/post/`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`, 
+        },
+      })
       .then((res) => {
         if (res.data.errors) {
           dispatch({ type: GET_POST_ERRORS, payload: res.data.errors });
         } else {
           dispatch({ type: GET_POST_ERRORS, payload: "" });
+          dispatch(getPosts());
+        }
+      })
+      .catch((err) => {
+        console.error("Erreur lors de l'ajout du post:", err);
+        if (err.response && err.response.data && err.response.data.errors) {
+          dispatch({ type: GET_POST_ERRORS, payload: err.response.data.errors });
         }
       });
   };

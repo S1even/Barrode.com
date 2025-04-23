@@ -7,15 +7,24 @@ import { updatePost } from "../../actions/post.actions";
 import DeleteCard from "./DeleteCard";
 import CardComments from "./CardComments";
 import styled from "styled-components";
+import MapViewer from "../MapViewer";
+
+
 
 const Card = ({ post }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdated, setIsUpdated] = useState(false);
   const [textUpdate, setTextUpdate] = useState(null);
   const [showComments, setShowComments] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+
   const usersData = useSelector((state) => state.usersReducer);
   const userData = useSelector((state) => state.userReducer);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!isEmpty(usersData[0])) setIsLoading(false);
+  }, [usersData]);
 
   const updateItem = () => {
     if (textUpdate) {
@@ -23,10 +32,6 @@ const Card = ({ post }) => {
     }
     setIsUpdated(false);
   };
-
-  useEffect(() => {
-    !isEmpty(usersData[0]) && setIsLoading(false);
-  }, [usersData]);
 
   return (
     <StyledCard key={post._id}>
@@ -39,10 +44,9 @@ const Card = ({ post }) => {
               src={
                 !isEmpty(usersData[0]) &&
                 usersData
-                  .map((user) => {
-                    if (user._id === post.posterId) return user.picture;
-                    else return null;
-                  })
+                  .map((user) =>
+                    user._id === post.posterId ? user.picture : null
+                  )
                   .join("")
               }
               alt="poster-pic"
@@ -54,10 +58,9 @@ const Card = ({ post }) => {
                 <h3>
                   {!isEmpty(usersData[0]) &&
                     usersData
-                      .map((user) => {
-                        if (user._id === post.posterId) return user.pseudo;
-                        else return null;
-                      })
+                      .map((user) =>
+                        user._id === post.posterId ? user.pseudo : null
+                      )
                       .join("")}
                 </h3>
                 {post.posterId !== userData._id && (
@@ -66,8 +69,10 @@ const Card = ({ post }) => {
               </div>
               <span>{dateParser(post.createdAt)}</span>
             </div>
-            {isUpdated === false && <p>{post.message}</p>}
-            {isUpdated && (
+
+            {!isUpdated ? (
+              <p>{post.message}</p>
+            ) : (
               <div className="update-post">
                 <textarea
                   defaultValue={post.message}
@@ -80,6 +85,7 @@ const Card = ({ post }) => {
                 </div>
               </div>
             )}
+
             {post.picture && (
               <img src={post.picture} alt="card-pic" className="card-pic" />
             )}
@@ -94,12 +100,22 @@ const Card = ({ post }) => {
                 title={post._id}
               ></iframe>
             )}
+
             {userData._id === post.posterId && (
               <div className="button-container">
                 <div onClick={() => setIsUpdated(!isUpdated)}>
-                  {/* EDIT ICON */}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="#2c3e50" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="#2c3e50"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M9 7h-3a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-3" />
                     <path d="M9 15h3l8.5 -8.5a1.5 1.5 0 0 0 -3 -3l-8.5 8.5v3" />
                     <line x1="16" y1="5" x2="19" y2="8" />
@@ -108,11 +124,24 @@ const Card = ({ post }) => {
                 <DeleteCard id={post._id} />
               </div>
             )}
+
             <div className="card-footer">
-              <div className="comment-icon" onClick={() => setShowComments(!showComments)}>
-                {/* COMMENT ICON */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="#2c3e50" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+              <div
+                className="comment-icon"
+                onClick={() => setShowComments(!showComments)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="#2c3e50"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                   <path d="M4 21v-13a3 3 0 0 1 3 -3h10a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-9l-4 4" />
                   <line x1="8" y1="9" x2="16" y2="9" />
                   <line x1="8" y1="13" x2="14" y2="13" />
@@ -120,9 +149,18 @@ const Card = ({ post }) => {
                 <span>{post.comments.length}</span>
               </div>
               <LikeButton post={post} />
-              {/* SHARE ICON */}
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="#2c3e50" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="#2c3e50"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <circle cx="6" cy="12" r="3" />
                 <circle cx="18" cy="6" r="3" />
                 <circle cx="18" cy="18" r="3" />
@@ -130,8 +168,41 @@ const Card = ({ post }) => {
                 <line x1="8.7" y1="13.3" x2="15.3" y2="16.7" />
               </svg>
             </div>
+
             {showComments && <CardComments post={post} />}
+
+            <button
+              onClick={() => setShowMap(true)}
+              title="Voir le tracé"
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                marginTop: "10px",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="none"
+                stroke="#2c3e50"
+                strokeWidth="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path d="M9 2L15 6L9 10L3 6L9 2Z" />
+                <path d="M15 6V18L9 22V10" />
+              </svg>
+              <span style={{ marginLeft: "5px" }}>Voir le tracé</span>
+            </button>
           </div>
+
+          {showMap && (
+            <MapViewer path={post.path} onClose={() => setShowMap(false)} />
+          )}
         </>
       )}
     </StyledCard>
@@ -139,6 +210,7 @@ const Card = ({ post }) => {
 };
 
 export default Card;
+
 
 const StyledCard = styled.li`
   display: flex;
@@ -271,6 +343,7 @@ const StyledCard = styled.li`
       img {
         width: 20px;
         cursor: pointer;
+        
       }
     }
   }

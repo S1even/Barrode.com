@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { isEmpty, timestampParser } from "../Utils";
 import { NavLink } from "react-router-dom";
-import { addPost, getPosts } from "../../actions/post.actions";
+import { addPost } from "../../actions/post.actions";
 import styled from "styled-components";
+import MapModal from "../MapModal";
+import 'leaflet/dist/leaflet.css';
 
 const NewPostForm = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -11,39 +13,41 @@ const NewPostForm = () => {
   const [postPicture, setPostPicture] = useState(null);
   const [video, setVideo] = useState("");
   const [file, setFile] = useState();
+  const [showMap, setShowMap] = useState(false);
+  const [gpsPoints, setGpsPoints] = useState([]);
+
   const userData = useSelector((state) => state.userReducer.user);
-  const error = useSelector((state) => state.errorReducer.postError);
   const dispatch = useDispatch();
-  
+
   const handlePost = async () => {
     if (message || postPicture || video) {
       const data = new FormData();
-      data.append('posterId', userData._id);
-      data.append('message', message);
-      if (file) data.append("file", file);
-      data.append('video', video);
+      data.append("posterId", userData._id);
+      data.append("message", message);
+      if (file) data.append("picture", file);
+      data.append("video", video);
+      if (gpsPoints.length > 0) data.append("path", JSON.stringify(gpsPoints));
 
       await dispatch(addPost(data));
-      dispatch(getPosts());
       cancelPost();
     } else {
-      alert("Veuillez entrer un message")
+      alert("Veuillez entrer un message");
     }
   };
- 
+
   const handlePicture = (e) => {
     setPostPicture(URL.createObjectURL(e.target.files[0]));
     setFile(e.target.files[0]);
-    setVideo('');
-  }; 
+    setVideo("");
+  };
 
   const cancelPost = () => {
     setMessage("");
     setPostPicture("");
     setVideo("");
     setFile("");
+    setGpsPoints([]);
   };
-
 
   useEffect(() => {
     if (!isEmpty(userData)) setIsLoading(false);
@@ -59,127 +63,133 @@ const NewPostForm = () => {
           setVideo(embed.split("&")[0]);
           findLink.splice(i, 1);
           setMessage(findLink.join(" "));
-          setPostPicture('');
+          setPostPicture("");
         }
       }
     };
+
     handleVideo();
   }, [userData, message, video]);
 
   return (
     <PostContainer>
-    <div className="post-container">
-      {isLoading ? (
-        <i className="fas fa-spinner fa-pulse"></i>
-      ) : (
-        <>
-          <div className="data">
-            <p>
-              <span>{userData.following ? userData.following.length : 0}</span>{" "}
-              Abonnement
-              {userData.following && userData.following.length > 1 ? "s" : null}
-            </p>
-            <p>
-              <span>{userData.followers ? userData.followers.length : 0}</span>{" "}
-              Abonné
-              {userData.followers && userData.followers.length > 1 ? "s" : null}
-            </p>
-          </div>
-          <NavLink exact to="/profil">
-            <div className="user-info">
-              <img src={userData.picture} alt="user-img" />
+      <div className="post-container">
+        {isLoading ? (
+          <i className="fas fa-spinner fa-pulse"></i>
+        ) : (
+          <>
+            <div className="data">
+              <p>
+                <span>{userData.following?.length || 0}</span> Abonnement
+                {userData.following?.length > 1 ? "s" : null}
+              </p>
+              <p>
+                <span>{userData.followers?.length || 0}</span> Abonné
+                {userData.followers?.length > 1 ? "s" : null}
+              </p>
             </div>
-          </NavLink>
-          <div className="post-form">
-            <textarea
-              name="message"
-              id="message"
-              placeholder="Quoi de neuf ?"
-              onChange={(e) => setMessage(e.target.value)}
-              value={message}
-            />
-            {message || postPicture || video.length > 20 ? (
-              <li className="card-container">
-                <div className="card-left">
-                  <img src={userData.picture} alt="user-pic" />
-                </div>
-                <div className="card-right">
-                  <div className="card-header">
-                    <div className="pseudo">
-                      <h3>{userData.pseudo}</h3>
-                    </div>
-                    <span>{timestampParser(Date.now())}</span>
+            <NavLink exact="true" to="/profil">
+              <div className="user-info">
+                <img src={userData.picture} alt="user-img" />
+              </div>
+            </NavLink>
+            <div className="post-form">
+              <textarea
+                name="message"
+                id="message"
+                placeholder="Quoi de neuf ?"
+                onChange={(e) => setMessage(e.target.value)}
+                value={message}
+              />
+
+              {(message || postPicture || video.length > 20) && (
+                <li className="card-container">
+                  <div className="card-left">
+                    <img src={userData.picture} alt="user-pic" />
                   </div>
-                  <div className="content">
-                    <p>{message}</p>
-                    <img src={postPicture} alt="" />
-                    {video && (
-                      <iframe
-                        src={video}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title={video}
-                      ></iframe>
+                  <div className="card-right">
+                    <div className="card-header">
+                      <div className="pseudo">
+                        <h3>{userData.pseudo}</h3>
+                      </div>
+                      <span>{timestampParser(Date.now())}</span>
+                    </div>
+                    <div className="content">
+                      <p>{message}</p>
+                      {postPicture && <img src={postPicture} alt="preview" />}
+                      {video && (
+                        <iframe
+                          src={video}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title={video}
+                        ></iframe>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              )}
+
+              <div className="footer-form">
+                <div className="icon-group">
+                  <div
+                    className="icon"
+                    onClick={() => document.getElementById("file-upload").click()}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {isEmpty(video) && (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-photo" width="36" height="36" viewBox="0 0 24 24" strokeWidth="1.5" stroke="#2c3e50" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                          <line x1="15" y1="8" x2="15.01" y2="8" />
+                          <rect x="4" y="4" width="16" height="16" rx="3" />
+                          <path d="M4 15l4 -4a3 5 0 0 1 3 0l5 5" />
+                          <path d="M14 14l1 -1a3 5 0 0 1 3 0l2 2" />
+                        </svg>
+                        <input
+                          type="file"
+                          id="file-upload"
+                          name="file"
+                          accept=".jpg, .jpeg, .png"
+                          onChange={handlePicture}
+                          style={{ display: "none" }}
+                        />
+                      </>
                     )}
                   </div>
-                </div>
-              </li>
-            ) : null}
-<div className="footer-form">
-  <div className="icon" onClick={() => document.getElementById('file-upload').click()} style={{ cursor: 'pointer' }}>
-    {isEmpty(video) && (
-      <>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="icon icon-tabler icon-tabler-photo"
-          width="44"
-          height="44"
-          viewBox="0 0 24 24"
-          strokeWidth="1.5"
-          stroke="#2c3e50"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <line x1="15" y1="8" x2="15.01" y2="8" />
-          <rect x="4" y="4" width="16" height="16" rx="3" />
-          <path d="M4 15l4 -4a3 5 0 0 1 3 0l5 5" />
-          <path d="M14 14l1 -1a3 5 0 0 1 3 0l2 2" />
-        </svg>
 
-        <input
-          type="file"
-          id="file-upload"
-          name="file"
-          accept=".jpg, .jpeg, .png"
-          onChange={(e) => handlePicture(e)}
-          style={{ display: 'none' }}
-        />
-      </>
-    )}
-                {video && (
-                  <button onClick={() => setVideo("")}>Supprimer video</button>
-                )}
-              </div>
-              {!isEmpty(error.format) && <p>{error.format}</p>}
-              {!isEmpty(error.maxSize) && <p>{error.maxSize}</p>}
-              <div className="btn-send">
-                {message || postPicture || video.length > 20 ? (
-                  <button className="cancel" onClick={cancelPost}>
-                    Annuler message
-                  </button>
-                ) : null}
-                <button className="send" onClick={handlePost}>
-                  Envoyer
-                </button>
+                  <div className="icon" onClick={() => setShowMap(true)} style={{ cursor: "pointer" }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-map" width="44" height="44" viewBox="0 0 24 24" strokeWidth="1.5" stroke="#2c3e50" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                      <polyline points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6" />
+                      <line x1="9" y1="3" x2="9" y2="18" />
+                      <line x1="15" y1="6" x2="15" y2="21" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="btn-send">
+                  {(message || postPicture || video.length > 20) && (
+                    <button className="cancel" onClick={cancelPost}>Annuler message</button>
+                  )}
+                  <button className="send" onClick={handlePost}>Envoyer</button>
+                </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
+
+      {showMap && (
+        <MapModal
+        show={showMap}
+        onClose={() => setShowMap(false)}
+        onAddPoint={(latlng) => setGpsPoints((prev) => [...prev, latlng])}
+        gpsPoints={gpsPoints}
+        setGpsPoints={setGpsPoints}
+  />
+)}
     </PostContainer>
   );
 };
@@ -187,7 +197,6 @@ const NewPostForm = () => {
 export default NewPostForm;
 
 const PostContainer = styled.div`
-
   background: white;
   border-radius: 20px;
   padding: 1.5rem 2.5rem;
@@ -206,6 +215,29 @@ const PostContainer = styled.div`
       color: #00bfff;
     }
   }
+
+
+  .map-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.map-container {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 800px;
+  width: 90%;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
 
   .user-info img {
     width: 60px;
@@ -326,6 +358,21 @@ const PostContainer = styled.div`
           }
         }
       }
+
+      .icon-group {
+        display: flex;
+        align-items: center;
+
+        .icon {
+          svg {
+            transition: transform 0.2s ease;
+          }
+
+          &:hover svg {
+            transform: scale(1.1);
+          }
+        }
+      }
     }
   }
-`;
+`

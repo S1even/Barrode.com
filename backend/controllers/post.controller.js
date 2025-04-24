@@ -22,14 +22,15 @@ const calculateDistance = (coord1, coord2) => {
 
 module.exports.createPost = async (req, res) => {
     let imageData = "";
-
-    const posterId = req.user._id;
     
-    console.log("ID utilisateur authentifié:", posterId);
+    const posterId = req.user._id || req.user;
+    const posterIdStr = posterId.toString();
+    
+    console.log("ID utilisateur authentifié:", posterIdStr);
 
     try {
-        if (!req.body.posterId || req.body.posterId === "undefined") {
-            throw new Error("posterId manquant ou invalide");
+        if (!posterId) {
+            throw new Error("Utilisateur non authentifié");
         }
         if (req.file) {
             if (!req.file.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
@@ -53,7 +54,7 @@ module.exports.createPost = async (req, res) => {
             }
         }
         const post = new PostModel({
-            posterId: posterId,
+            posterId: posterIdStr,
             message: req.body.message,
             picture: imageData,
             video: req.body.video,

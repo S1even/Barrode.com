@@ -1,7 +1,7 @@
-import UserModel from '../models/user.model.js';
-import jwt from 'jsonwebtoken';
+const UserModel = require('../models/user.model');
+const jwt = require('jsonwebtoken');
 
-export const checkUser = (req, res, next) => {
+exports.checkUser = (req, res, next) => {
     const token = req.cookies.jwt;
 
     if (token) {
@@ -22,40 +22,29 @@ export const checkUser = (req, res, next) => {
     }
 };
 
-export const requireAuth = async (req, res, next) => {
-    let token;
-  
-    // Priorité au header Authorization
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer ")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    } else if (req.cookies && req.cookies.jwt) {
-      // Fallback sur cookie
-      token = req.cookies.jwt;
-    }
-  
-    if (!token) {
-      return res.status(401).json({ message: "Accès refusé, pas de token" });
-    }
-  
-    try {
-      const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
-      console.log("Utilisateur authentifié :", decoded.id);
-  
-      const user = await UserModel.findById(decoded.id);
-      if (!user) {
-        return res.status(404).json({ message: "Utilisateur introuvable" });
-      }
-  
-      req.user = user; // On stocke l'objet utilisateur dans req.user
-      res.locals.user = user;
-      next();
-    } catch (err) {
-      console.log("Erreur JWT :", err);
-      return res.status(403).json({ message: "Token invalide" });
-    }
-};
+exports.requireAuth = async (req, res, next) => {
+  const token = req.cookies.jwt || (req.headers.authorization && req.headers.authorization.startsWith("Bearer ") ? 
+    req.headers.authorization.split(" ")[1] : null);
 
-  
+  if (!token) {
+    return res.status(403).json({ message: "Token manquant" });
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
+    req.user = {
+      _id: decodedToken.id.toString()
+    };
+    
+    // Important: stocker l'ID et l'utilisateur complet
+    const user = await UserModel.findById(decodedToken.id);
+    if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
+
+    req.user = user; // Stocker l'utilisateur complet
+    res.locals.user = user;
+    
+    next();
+  } catch (err) {
+    return res.status(403).json({ message: "Token invalide" });
+  }
+};

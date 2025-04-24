@@ -20,14 +20,14 @@ module.exports.loginUser = async (req, res) => {
       const token = jwt.sign(
         { id: user._id },
         process.env.TOKEN_SECRET,
-        { expiresIn: "15m" }
+        { expiresIn: "3d" }
       );
   
       // Stocker le token dans un cookie httpOnly
       res.cookie("jwt", token, {
         httpOnly: true,
-        maxAge: 15 * 60 * 1000, // 15 minutes en millisecondes
-        secure: process.env.NODE_ENV === "production", // true en production
+        maxAge: 3 * 24 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "strict"
       });
   
@@ -80,15 +80,25 @@ module.exports.userInfo = async (req, res) => {
 // Function Getme
 module.exports.getMe = async (req, res) => {
     try {
-        const user = await UserModel.findById(req.user._id).select("-password");
-        if (!user) {
-            return res.status(404).json({ error: "Utilisateur non trouvé" });
-        }
-        res.status(200).json(user);
+      // Si req.user est déjà l'objet utilisateur complet
+      if (req.user && req.user._id) {
+        return res.status(200).json(req.user);
+      }
+      
+      // Sinon, récupérer depuis l'ID
+      const userId = req.user || req.user.id;
+      const user = await UserModel.findById(userId).select("-password");
+      
+      if (!user) {
+        return res.status(404).json({ error: "Utilisateur non trouvé" });
+      }
+      
+      res.status(200).json(user);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+      console.error("Erreur getMe:", err);
+      res.status(500).json({ error: err.message });
     }
-};
+  };
 
 
 module.exports.updateUser = async (req, res) => {
@@ -223,13 +233,13 @@ module.exports.logoutUser = (req, res) => {
       const newToken = jwt.sign(
         { id: decoded.id },
         process.env.TOKEN_SECRET,
-        { expiresIn: "15m" } // Durée de validité du nouveau token
+        { expiresIn: "3d" } // Durée de validité du nouveau token
       );
   
       // Réponse avec un nouveau cookie contenant le JWT
       res.cookie("jwt", newToken, {
         httpOnly: true, // Empêche l'accès côté client
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 3 * 24 * 60 * 60 * 1000, // 3jours en millisecondes
         secure: process.env.NODE_ENV === "production", // Sécurisé en production (https)
         sameSite: "strict" // Empêche l'envoi de cookies dans des requêtes inter-domaines
       });

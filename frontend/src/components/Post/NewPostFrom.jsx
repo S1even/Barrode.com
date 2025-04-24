@@ -71,6 +71,7 @@ const NewPostForm = () => {
     handleVideo();
   }, [userData, message, video]);
 
+
   return (
     <PostContainer>
       <div className="post-container">

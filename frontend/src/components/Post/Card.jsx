@@ -19,12 +19,14 @@ const Card = ({ post }) => {
   const [showMap, setShowMap] = useState(false);
 
   const usersData = useSelector((state) => state.usersReducer);
-  const userData = useSelector((state) => state.userReducer);
+  const userData = useSelector((state) => state.userReducer.user);
   const dispatch = useDispatch();
 
   useEffect(() => {
+    
     if (!isEmpty(usersData[0])) setIsLoading(false);
   }, [usersData]);
+  
 
   const updateItem = () => {
     if (textUpdate) {
@@ -32,6 +34,13 @@ const Card = ({ post }) => {
     }
     setIsUpdated(false);
   };
+
+  console.log("userData._id:", userData._id);
+  console.log("post.posterId:", post.posterId);
+  console.log("post.posterId._id:", post.posterId?._id); // au cas où ce serait un objet
+  console.log("Match (string):", userData._id === post.posterId);
+  console.log("Match (object?):", userData._id === post.posterId?._id);
+
 
   return (
     <StyledCard key={post._id}>
@@ -41,28 +50,26 @@ const Card = ({ post }) => {
         <>
           <div className="card-left">
             <img
-              src={
-                !isEmpty(usersData[0]) &&
-                usersData
-                  .map((user) =>
-                    user._id === post.posterId ? user.picture : null
-                  )
-                  .join("")
-              }
-              alt="poster-pic"
+            src={
+              !isEmpty(usersData[0]) &&
+              usersData.find(user => 
+                user._id === (post.posterId?._id || post.posterId)
+              )?.picture
+            }
+            alt="poster-pic"
             />
+
           </div>
           <div className="card-right">
             <div className="card-header">
               <div className="pseudo">
                 <h3>
                   {!isEmpty(usersData[0]) &&
-                    usersData
-                      .map((user) =>
-                        user._id === post.posterId ? user.pseudo : null
-                      )
-                      .join("")}
-                </h3>
+                  usersData.find(user => 
+                    user._id === (post.posterId?._id || post.posterId)
+                  )?.pseudo
+                  }
+                  </h3>
                 {post.posterId !== userData._id && (
                   <FollowHandler idToFollow={post.posterId} type={"card"} />
                 )}
@@ -100,10 +107,12 @@ const Card = ({ post }) => {
                 title={post._id}
               ></iframe>
             )}
-
-            {userData._id === post.posterId && (
+            
+            
+            
+              {userData._id === (post.posterId?._id || post.posterId) && (
               <div className="button-container">
-                <div onClick={() => setIsUpdated(!isUpdated)}>
+              <div onClick={() => setIsUpdated(!isUpdated)}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"

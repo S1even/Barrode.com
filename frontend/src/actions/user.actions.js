@@ -15,15 +15,8 @@ export const loginUser = (email, password) => {
     return axios
       .post(`${process.env.REACT_APP_API_URL}api/user/login`, { email, password }, { withCredentials: true })
       .then((res) => {
-        console.log("Login Response:", res.data);
-        
-        if (res.data && res.data.user) {
-          dispatch({ type: "LOGIN_USER", payload: res.data.user });
-          return res.data;
-        } else {
-          dispatch({ type: "LOGIN_USER", payload: res.data });
-          return res.data;
-        }
+        dispatch({ type: "LOGIN_USER", payload: res.data.user });
+        return res.data;
       })
       .catch((err) => {
         console.error("Erreur lors de la connexion :", err);
@@ -84,20 +77,13 @@ export const getUsers = () => {
 // Récupération des données d'un utilisateur spécifique
 export const getUser = () => async (dispatch) => {
   try {
-    const token = localStorage.getItem("token");
-
-    const res = await axios.get(`${process.env.REACT_APP_API_URL}api/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      withCredentials: true,
-    });
-
+    const res = await axios.get(`api/user/me`);
     dispatch({ type: GET_USER, payload: res.data });
   } catch (err) {
     console.error("Erreur lors du getUser :", err);
   }
 };
+
 
 
 // Mise à jour de la bio utilisateur

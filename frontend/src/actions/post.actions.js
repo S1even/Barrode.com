@@ -1,4 +1,5 @@
-import axios from "axios";
+import axios from "../utils/axios";
+
 
 // posts
 export const GET_POSTS = "GET_POSTS";
@@ -38,14 +39,16 @@ export const getPosts = (page = 1, limit = 5) => {
 };
 
 export const addPost = (data) => {
-  return (dispatch) => {
-    const token = localStorage.getItem("token");
-    
+  return (dispatch, getState) => {
+    const userId = getState().userReducer._id;
+    const formData = data;
+    if (formData instanceof FormData && !formData.has('posterId')) {
+      formData.append('posterId', userId);
+    }
+
     return axios
       .post(`${process.env.REACT_APP_API_URL}api/post/`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`, 
-        },
+        withCredentials: true
       })
       .then((res) => {
         if (res.data.errors) {
@@ -55,14 +58,13 @@ export const addPost = (data) => {
           dispatch(getPosts());
         }
       })
-      .catch((err) => {
-        console.error("Erreur lors de l'ajout du post:", err);
-        if (err.response && err.response.data && err.response.data.errors) {
-          dispatch({ type: GET_POST_ERRORS, payload: err.response.data.errors });
-        }
+      .catch(err => {
+        console.error("Erreur lors de l'envoi du post:", err);
+        dispatch({ type: GET_POST_ERRORS, payload: err.response?.data?.errors || "Erreur inconnue" });
       });
   };
 };
+
 
 export const likePost = (postId, userId) => {
   return (dispatch) => {

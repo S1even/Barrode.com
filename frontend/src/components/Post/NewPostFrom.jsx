@@ -26,7 +26,17 @@ const NewPostForm = () => {
       data.append("message", message);
       if (file) data.append("picture", file);
       data.append("video", video);
-      if (gpsPoints.length > 0) data.append("path", JSON.stringify(gpsPoints));
+      
+      // Convertir les points GPS au format array [lat, lng] avant envoi
+      if (gpsPoints.length > 0) {
+        const formattedPoints = gpsPoints.map(point => {
+          // Si c'est déjà un tableau, le laisser tel quel
+          if (Array.isArray(point)) return point;
+          // Sinon, convertir l'objet {lat, lng} en tableau [lat, lng]
+          return [point.lat, point.lng];
+        });
+        data.append("path", JSON.stringify(formattedPoints));
+      }
 
       await dispatch(addPost(data));
       cancelPost();
@@ -47,6 +57,12 @@ const NewPostForm = () => {
     setVideo("");
     setFile("");
     setGpsPoints([]);
+  };
+
+  // Fonction pour ajouter un point GPS au format approprié
+  const handleAddGpsPoint = (latlng) => {
+    // Utiliser l'objet latlng directement dans l'état local pour l'affichage
+    setGpsPoints((prev) => [...prev, latlng]);
   };
 
   useEffect(() => {
@@ -184,13 +200,13 @@ const NewPostForm = () => {
 
       {showMap && (
         <MapModal
-        show={showMap}
-        onClose={() => setShowMap(false)}
-        onAddPoint={(latlng) => setGpsPoints((prev) => [...prev, latlng])}
-        gpsPoints={gpsPoints}
-        setGpsPoints={setGpsPoints}
-  />
-)}
+          show={showMap}
+          onClose={() => setShowMap(false)}
+          onAddPoint={handleAddGpsPoint}
+          gpsPoints={gpsPoints}
+          setGpsPoints={setGpsPoints}
+        />
+      )}
     </PostContainer>
   );
 };
@@ -217,28 +233,27 @@ const PostContainer = styled.div`
     }
   }
 
-
   .map-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-.map-container {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  max-width: 800px;
-  width: 90%;
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
-}
+  .map-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 800px;
+    width: 90%;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  }
 
   .user-info img {
     width: 60px;
@@ -376,4 +391,4 @@ const PostContainer = styled.div`
       }
     }
   }
-`
+`;

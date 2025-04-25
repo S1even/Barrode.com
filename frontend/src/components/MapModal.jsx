@@ -24,7 +24,6 @@ const MapClickHandler = ({ onMapClick }) => {
 const MapModal = ({ show, onClose, onAddPoint, gpsPoints, setGpsPoints }) => {
   const [markers, setMarkers] = useState(gpsPoints || []);
 
-
   const handleValidatePoints = () => {
     setGpsPoints(markers); 
     onClose();
@@ -62,7 +61,6 @@ const MapModal = ({ show, onClose, onAddPoint, gpsPoints, setGpsPoints }) => {
           <button onClick={handleResetPoints}>Réinitialiser</button>
           <button onClick={onClose}>Fermer</button>
           <button onClick={handleValidatePoints}>Valider les points</button>
-
         </div>
       </ModalContent>
     </ModalOverlay>
@@ -71,8 +69,6 @@ const MapModal = ({ show, onClose, onAddPoint, gpsPoints, setGpsPoints }) => {
 
 export default MapModal;
 
-
-// Styles pour la modale
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;

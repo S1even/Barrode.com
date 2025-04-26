@@ -18,15 +18,23 @@ passport.use(new GoogleStrategy({
     let user = await UserModel.findOne({ googleId: profile.id });
 
     if (!user) {
+      // Lors de la création d'un nouvel utilisateur Google, assignez displayName à pseudo
       user = await UserModel.create({
         googleId: profile.id,
         email: profile.emails[0].value,
-        name: profile.displayName,
+        name: profile.displayName,        // Gardez le champ name
+        pseudo: profile.displayName,      // AJOUT: utilisez displayName comme pseudo
         picture: profile.photos[0].value,
         refreshToken: typeof cleanRefreshToken === "string" ? cleanRefreshToken : undefined
       });
     } else if (typeof cleanRefreshToken === "string") {
       user.refreshToken = cleanRefreshToken;
+      
+      // Si l'utilisateur existe mais n'a pas de pseudo, ajoutez-le
+      if (!user.pseudo && user.name) {
+        user.pseudo = user.name;
+      }
+      
       await user.save();
     }
 

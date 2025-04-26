@@ -2,24 +2,40 @@ const UserModel = require('../models/user.model');
 const jwt = require('jsonwebtoken');
 
 exports.checkUser = (req, res, next) => {
-    const token = req.cookies.jwt;
+  const token = req.cookies.jwt;
 
-    if (token) {
-        jwt.verify(token, process.env.TOKEN_SECRET, async (err, decodedToken) => {
-            if (err) {
-                res.locals.user = null;
-                res.clearCookie("jwt");
-                return next();
-            } else {
-                let user = await UserModel.findById(decodedToken.id);
-                res.locals.user = user;
-                return next();
-            }
-        });
-    } else {
-        res.locals.user = null;
-        return next();
-    }
+  if (token) {
+      jwt.verify(token, process.env.TOKEN_SECRET, async (err, decodedToken) => {
+          if (err) {
+              res.locals.user = null;
+              res.clearCookie("jwt");
+              return next();
+          } else {
+              let user = await UserModel.findById(decodedToken.id);
+              
+              // Normalisation des données utilisateur
+              if (user) {
+                  // Si l'utilisateur a un name mais pas de pseudo (cas Google), utilisez name comme pseudo
+                  if (!user.pseudo && user.name) {
+                      user.pseudo = user.name;
+                  }
+                  
+                  // Assurez-vous que le pseudo est inclus dans les données utilisateur
+                  res.locals.user = {
+                      ...user._doc,
+                      pseudo: user.pseudo || user.name // Fallback au name si nécessaire
+                  };
+              } else {
+                  res.locals.user = null;
+              }
+              
+              return next();
+          }
+      });
+  } else {
+      res.locals.user = null;
+      return next();
+  }
 };
 
 exports.requireAuth = async (req, res, next) => {

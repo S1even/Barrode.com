@@ -79,26 +79,37 @@ module.exports.userInfo = async (req, res) => {
 
 // Function Getme
 module.exports.getMe = async (req, res) => {
-    try {
-      // Si req.user est déjà l'objet utilisateur complet
-      if (req.user && req.user._id) {
-        return res.status(200).json(req.user);
-      }
-      
-      // Sinon, récupérer depuis l'ID
-      const userId = req.user || req.user.id;
-      const user = await UserModel.findById(userId).select("-password");
-      
-      if (!user) {
-        return res.status(404).json({ error: "Utilisateur non trouvé" });
-      }
-      
-      res.status(200).json(user);
-    } catch (err) {
-      console.error("Erreur getMe:", err);
-      res.status(500).json({ error: err.message });
+  try {
+    // Si req.user est déjà l'objet utilisateur complet
+    if (req.user && req.user._id) {
+      // Normalisation pour s'assurer que pseudo est défini
+      const userData = {
+        ...req.user._doc || req.user,
+        pseudo: req.user.pseudo || req.user.name // Utiliser name comme fallback si pas de pseudo
+      };
+      return res.status(200).json(userData);
     }
-  };
+    
+    // Sinon, récupérer depuis l'ID
+    const userId = req.user?.id || req.user;
+    const user = await UserModel.findById(userId).select("-password");
+    
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    
+    // Normalisation des données avant de les envoyer
+    const userData = {
+      ...user._doc,
+      pseudo: user.pseudo || user.name // Utiliser name comme fallback si pas de pseudo
+    };
+    
+    res.status(200).json(userData);
+  } catch (err) {
+    console.error("Erreur getMe:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
 
 
 module.exports.updateUser = async (req, res) => {

@@ -9,6 +9,8 @@ import { getUsers } from "./actions/user.actions";
 import { getPosts } from "./actions/post.actions";
 import { BrowserRouter } from "react-router-dom";
 import { checkUserLoggedIn } from "./actions/user.actions";
+import 'leaflet/dist/leaflet.css';
+
 
 const store = configureStore({
   reducer: rootReducer,

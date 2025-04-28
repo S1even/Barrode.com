@@ -129,35 +129,41 @@ export const addComment = (postId, commenterId, text, commenterPseudo) => {
       data: { commenterId, text, commenterPseudo },
     })
       .then((res) => {
-        dispatch({ type: ADD_COMMENT, payload: { postId } });
+        dispatch({ 
+          type: ADD_COMMENT, 
+          payload: { 
+            postId,
+            comment: res.data.comment || { commenterId, text, commenterPseudo, timestamp: Date.now() } 
+          } 
+        });
       })
       .catch((err) => console.log(err));
   };
 };
 
-export const editComment = (postId, commentId, text) => {
+export const editComment = (postId, commentid, text) => {
   return (dispatch) => {
     return axios({
       method: "patch",
       url: `${process.env.REACT_APP_API_URL}api/post/edit-comment-post/${postId}`,
-      data: { commentId, text },
+      data: { commentid, text },
     })
       .then((res) => {
-        dispatch({ type: EDIT_COMMENT, payload: { postId, commentId, text } });
+        dispatch({ type: EDIT_COMMENT, payload: { postId, commentid, text } });
       })
       .catch((err) => console.log(err));
   };
 };
 
-export const deleteComment = (postId, commentId) => {
+export const deleteComment = (postId, commentid) => {
   return (dispatch) => {
     return axios({
       method: "patch",
       url: `${process.env.REACT_APP_API_URL}api/post/delete-comment-post/${postId}`,
-      data: { commentId },
+      data: { commentid },
     })
       .then((res) => {
-        dispatch({ type: DELETE_COMMENT, payload: { postId, commentId } });
+        dispatch({ type: DELETE_COMMENT, payload: { postId, commentid } });
       })
       .catch((err) => console.log(err));
   };

@@ -77,7 +77,7 @@ export const getUsers = () => {
 // Récupération des données d'un utilisateur spécifique
 export const getUser = () => async (dispatch) => {
   try {
-    const res = await axios.get(`api/user/me`);
+    const res = await axios.get(`${process.env.REACT_APP_API_URL}api/user/me`, { withCredentials: true });
     dispatch({ type: GET_USER, payload: res.data });
   } catch (err) {
     console.error("Erreur lors du getUser :", err);
@@ -133,7 +133,6 @@ export const uploadPicture = (data, id) => {
   };
 };
 
-// Suivre un utilisateur
 export const followUser = (followerId, idToFollow) => {
   console.log("Demande de suivi utilisateur :", idToFollow, "par :", followerId);
   return (dispatch) => {
@@ -153,7 +152,6 @@ export const followUser = (followerId, idToFollow) => {
   };
 };
 
-// Arrêter de suivre un utilisateur
 export const unfollowUser = (followerId, idToUnfollow) => {
   console.log("Demande d'arrêt de suivi utilisateur :", idToUnfollow, "par :", followerId);
   return (dispatch) => {

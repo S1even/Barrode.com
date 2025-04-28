@@ -60,6 +60,9 @@ app.get("/jwtid", requireAuth, (req, res) => {
 app.use("/api/post", postRoutes);
 app.use("/api/user", userRoutes);
 
+app.use("/uploads", express.static("uploads"));
+
+
 
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });

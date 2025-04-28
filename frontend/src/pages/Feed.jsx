@@ -6,7 +6,6 @@ import { isEmpty } from "../components/Utils";
 import Navbar from '../components/Navbar';
 import Image from '../styles/assets/img/BanniereBarrode.png';
 import Card from "../components/Post/Card";
-import Trends from "../components/Trends";
 import FriendsHint from "../components/Profil/FriendsHint";
 import NewPostForm from "../components/Post/NewPostFrom";
 import Thread from "../components/Thread";
@@ -28,7 +27,6 @@ const Feed = () => {
       </div>
       <div className="right-side">
         <div className="right-side-container">
-          <Trends />
           {uid && <FriendsHint />}
         </div>
       </div>

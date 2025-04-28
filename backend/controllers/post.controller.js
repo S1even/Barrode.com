@@ -147,16 +147,20 @@ module.exports.likePost = async (req, res) => {
         return res.status(400).send('ID unknown: ' + req.params.id);
 
     try {
+        // Normaliser les IDs pour s'assurer qu'ils sont stockés comme strings
+        const postId = req.params.id.toString();
+        const userId = req.body.id.toString();
+
         const postLike = await PostModel.findByIdAndUpdate(
-            req.params.id,
-            { $addToSet: { likers: req.body.id } },
+            postId,
+            { $addToSet: { likers: userId } },
             { new: true },
         );
         if (!postLike) return res.status(404).send('Post not found');
 
         const userLiker = await UserModel.findByIdAndUpdate(
-            req.body.id,
-            { $addToSet: { likes: req.params.id } },
+            userId,
+            { $addToSet: { likes: postId } },
             { new: true },
         );
         if (!userLiker) return res.status(404).send('User not found');

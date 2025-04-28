@@ -29,19 +29,27 @@ export default function postReducer(state = initialState, action) {
       return mergedPosts;
     
 
-    case LIKE_POST:
-      return state.map((post) =>
-        post._id === action.payload.postId
-          ? { ...post, likers: [action.payload.userId, ...post.likers] }
-          : post
-      );
-
-    case UNLIKE_POST:
-      return state.map((post) =>
-        post._id === action.payload.postId
-          ? { ...post, likers: post.likers.filter((id) => id !== action.payload.userId) }
-          : post
-      );
+      case LIKE_POST:
+        return state.map((post) => {
+          if (post._id === action.payload.postId) {
+            return {
+              ...post,
+              likers: [...post.likers, action.payload.userId]
+            };
+          }
+          return post;
+        });
+      
+      case UNLIKE_POST:
+        return state.map((post) => {
+          if (post._id === action.payload.postId) {
+            return {
+              ...post,
+              likers: post.likers.filter((id) => id !== action.payload.userId)
+            };
+          }
+          return post;
+        });
 
     case UPDATE_POST:
       return state.map((post) =>

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { dateParser, isEmpty } from "../Utils";
 import FollowHandler from "../Profil/FollowHandler";
@@ -7,7 +7,12 @@ import DeleteCard from "./DeleteCard";
 import CardComments from "./CardComments";
 import styled from "styled-components";
 import MapViewer from "../MapViewer";
-import { UidContext } from "../AppContext";
+
+// Fonction utilitaire pour normaliser les IDs
+const normalizeId = (id) => {
+  if (!id) return "";
+  return typeof id === 'object' && id._id ? id._id.toString() : id.toString();
+};
 
 const Card = ({ post }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,54 +25,75 @@ const Card = ({ post }) => {
   const usersData = useSelector((state) => state.usersReducer);
   const userData = useSelector((state) => state.userReducer.user);
   const dispatch = useDispatch();
-  const uid = useContext(UidContext);
+  
+  // Normaliser l'ID utilisateur depuis Redux
+  const uid = userData && userData._id ? normalizeId(userData._id) : "";
 
   useEffect(() => {
     if (!isEmpty(usersData[0])) setIsLoading(false);
   }, [usersData]);
 
   useEffect(() => {
-    if (post.likers && post.likers.includes(uid)) setLiked(true);
-    else setLiked(false);
+    if (post.likers && Array.isArray(post.likers)) {
+      // Normaliser chaque ID de liker pour la comparaison
+      const isLiked = post.likers.some(likerId => normalizeId(likerId) === uid);
+      setLiked(isLiked);
+    }
   }, [uid, post.likers]);
 
   const updateItem = () => {
     if (textUpdate) {
-      dispatch(updatePost(post._id, textUpdate));
+      dispatch(updatePost(normalizeId(post._id), textUpdate));
     }
     setIsUpdated(false);
   };
 
-  const handleLike = () => {
-    // S'assurer que uid et post._id existent
-    if (!uid || !post._id) {
-      console.log("Missing uid or post._id", { uid, postId: post._id });
+  useEffect(() => {
+    console.log("userData from Redux:", userData);
+    console.log("User ID (uid):", uid);
+  }, [userData, uid]);
+
+  const handleLike = (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Empêche la propagation de l'événement
+    
+    // Normaliser l'ID du post
+    const postId = normalizeId(post._id);
+
+    if (!uid) {
+      console.error("User ID is missing");
+      return;
+    }
+    
+    console.log("Like clicked - Debug:", { 
+      uid, 
+      postId, 
+      likers: post.likers 
+    });
+  
+    if (!uid || !postId) {
+      console.error("Missing data:", { uid, postId });
       return;
     }
   
     if (liked) {
-      console.log("Unlike post", post._id, uid);
-      dispatch(unlikePost(post._id, uid))
-        .then(() => {
-          console.log("Unlike successful");
-        })
-        .catch(err => {
-          console.error("Unlike failed", err);
-        });
+      console.log("Dispatching unlike");
+      dispatch(unlikePost(postId, uid))
+        .then(() => console.log("Unlike action completed"))
+        .catch(err => console.error("Unlike error:", err));
     } else {
-      console.log("Like post", post._id, uid);
-      dispatch(likePost(post._id, uid))
-        .then(() => {
-          console.log("Like successful");
-        })
-        .catch(err => {
-          console.error("Like failed", err);
-        });
+      console.log("Dispatching like");
+      dispatch(likePost(postId, uid))
+        .then(() => console.log("Like action completed"))
+        .catch(err => console.error("Like error:", err));
     }
   };
-
+  
+  // Normaliser l'ID du créateur du post
+  const posterId = normalizeId(post.posterId?._id || post.posterId);
+  
   return (
-    <StyledCard key={post._id}>
+    <StyledCard key={normalizeId(post._id)}>
       {isLoading ? (
         <i className="fas fa-spinner fa-spin"></i>
       ) : (
@@ -78,7 +104,7 @@ const Card = ({ post }) => {
                 src={
                   !isEmpty(usersData[0]) &&
                   usersData.find(user => 
-                    user._id === (post.posterId?._id || post.posterId)
+                    normalizeId(user._id) === posterId
                   )?.picture
                 }
                 alt="poster-pic"
@@ -90,7 +116,7 @@ const Card = ({ post }) => {
                   <h3>
                     {!isEmpty(usersData[0]) && (() => {
                       const postUser = usersData.find(user => 
-                        user._id === (post.posterId?._id || post.posterId)
+                        normalizeId(user._id) === posterId
                       );
                       
                       if (!postUser) return "Utilisateur inconnu";
@@ -99,8 +125,8 @@ const Card = ({ post }) => {
                       return postUser.pseudo || postUser.name;
                     })()}
                   </h3>
-                  {post.posterId !== userData._id && (
-                    <FollowHandler idToFollow={post.posterId} type={"card"} />
+                  {posterId !== uid && (
+                    <FollowHandler idToFollow={posterId} type={"card"} />
                   )}
                 </div>
                 <span>{dateParser(post.createdAt)}</span>
@@ -133,11 +159,11 @@ const Card = ({ post }) => {
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  title={post._id}
+                  title={normalizeId(post._id)}
                 ></iframe>
               )}
               
-              {userData._id === (post.posterId?._id || post.posterId) && (
+              {uid === posterId && (
                 <div className="button-container">
                   <div onClick={() => setIsUpdated(!isUpdated)}>
                     <svg
@@ -157,7 +183,7 @@ const Card = ({ post }) => {
                       <line x1="16" y1="5" x2="19" y2="8" />
                     </svg>
                   </div>
-                  <DeleteCard id={post._id} />
+                  <DeleteCard id={normalizeId(post._id)} />
                 </div>
               )}
               <CardFooter>
@@ -184,60 +210,14 @@ const Card = ({ post }) => {
                   <span>{post.comments ? post.comments.length : 0}</span>
                 </div>
                 
-                {uid ? (
-                  <div className="like-icon" onClick={handleLike}>
-                    {liked ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="#FF7B77"
-                        fill="#FF7B77"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M19.5 13.572l-7.5 7.428l-7.5-7.428m0 0a5 5 0 1 1 7.5-6.566a5 5 0 1 1 7.5 6.572" />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20" 
-                        height="20"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="#2c3e50"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M19.5 13.572l-7.5 7.428l-7.5-7.428m0 0a5 5 0 1 1 7.5-6.566a5 5 0 1 1 7.5 6.572" />
-                      </svg>
-                    )}
-                    <span>{post.likers ? post.likers.length : 0}</span>
-                  </div>
-                ) : (
-                  <div className="like-icon">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="#2c3e50"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M19.5 13.572l-7.5 7.428l-7.5-7.428m0 0a5 5 0 1 1 7.5-6.566a5 5 0 1 1 7.5 6.572" />
+                <div className="like-icon" onClick={handleLike}>
+                  <HeartIcon className={liked ? "liked" : "not-liked"}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" />
                     </svg>
-                    <span>{post.likers ? post.likers.length : 0}</span>
-                  </div>
-                )}
+                  </HeartIcon>
+                  <span>{post.likers ? post.likers.length : 0}</span>
+                </div> 
               </CardFooter>
               
               <MapButton
@@ -442,4 +422,34 @@ const CommentsSection = styled.div`
   border-top: 1px solid #eaeaea;
   padding: 1rem 1.5rem;
   background-color: #fafafa;
+`;
+
+const HeartIcon = styled.div`
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+
+  &.not-liked svg {
+    fill: none;
+    stroke: #2c3e50;
+    stroke-width: 1.5;
+  }
+
+  &.liked svg {
+    fill: #e74c3c;
+    stroke: #e74c3c;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
 `;

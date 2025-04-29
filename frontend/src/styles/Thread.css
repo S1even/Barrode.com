@@ -1,0 +1,18 @@
+.end-message {
+    display: flex;
+    justify-content: center; /* Centre horizontalement */
+    align-items: center;     /* Centre verticalement */
+    font-size: 1rem;         /* Taille du texte */
+    color: #666;             /* Couleur du texte */
+    padding: 20px;           /* Espacement autour du message */
+    text-align: center;      /* Centre le texte à l'intérieur */
+  }
+
+
+  @media (max-width: 768px) {
+    .end-message {
+      font-size: 0.875rem;
+      padding: 15px;
+    }
+  }
+  

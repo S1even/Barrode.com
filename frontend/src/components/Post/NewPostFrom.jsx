@@ -95,16 +95,7 @@ const NewPostForm = () => {
           <i className="fas fa-spinner fa-pulse"></i>
         ) : (
           <>
-            <div className="data">
-              <p>
-                <span>{userData.following?.length || 0}</span> Abonnement
-                {userData.following?.length > 1 ? "s" : null}
-              </p>
-              <p>
-                <span>{userData.followers?.length || 0}</span> Abonné
-                {userData.followers?.length > 1 ? "s" : null}
-              </p>
-            </div>
+          
             <NavLink exact="true" to="/profil">
               <div className="user-info">
                 <img src={userData.picture} alt="user-img" />

@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import { UidContext } from "../components/AppContext";
 import { isEmpty } from "../components/Utils";
 import Navbar from '../components/Navbar';
-import Image from '../styles/assets/img/BanniereBarrode.png';
 import Card from "../components/Post/Card";
 import FriendsHint from "../components/Profil/FriendsHint";
 import NewPostForm from "../components/Post/NewPostFrom";
@@ -18,7 +17,6 @@ const Feed = () => {
     <div className="feed-page">
       <div className="home-container">
         <Navbar />
-        <img src={Image} alt="Image Header" className="image-classPF" />
         <NewPostForm />
         <Thread />
         <ul>

@@ -4,6 +4,7 @@ import { getPosts } from "../actions/post.actions";
 import Card from "./Post/Card";
 import { isEmpty } from "./Utils";
 import InfiniteScroll from "react-infinite-scroll-component";
+import '../styles/Thread.css';
 
 const Thread = () => {
   const dispatch = useDispatch();

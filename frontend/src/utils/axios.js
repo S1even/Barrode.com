@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-
-const baseURL = process.env.REACT_APP_API_URL || 'https://barrodecom-production.up.railway.app/';
-
 const instance = axios.create({
-  baseURL,
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/',
   withCredentials: true,
 });
 

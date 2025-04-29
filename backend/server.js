@@ -19,7 +19,7 @@ const app = express();
 
 
 const corsOptions = {
-  origin: "https://barrode-com.vercel.app",
+  origin: process.env.CLIENT_URL || "https://barrode-com.vercel.app/",
   credentials: true,
   allowedHeaders: ['sessionId', 'Content-Type', 'Authorization'],
   exposedHeaders: ['sessionId'],
@@ -41,7 +41,9 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    maxAge: 24 * 60 * 60 * 1000 // 1 jour
+    sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000, // 1 jour
+    domain: process.env.NODE_ENV === "production" ? '.votre-domaine.com' : undefined
   }
 }));
 app.use(passport.initialize());

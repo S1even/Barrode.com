@@ -9,6 +9,7 @@ import Trending from './pages/Trending';
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/login" />} />
       <Route path="/login" element={<Home />} />
       <Route path="/register" element={<Register />} />
       <Route path="/feed" element={<Feed />} />

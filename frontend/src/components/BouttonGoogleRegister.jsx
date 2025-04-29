@@ -25,8 +25,8 @@ const StyledWrapper = styled.div`
 
   button {
     position: absolute;
-    bottom: -50px;
-    right: 560px;
+    bottom: 5px;
+    right: 35px;
     max-width: 320px;
     display: flex;
     align-items: center;

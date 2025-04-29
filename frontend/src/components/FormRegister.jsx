@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
+import BouttonGoogleRegister from "./BouttonGoogleRegister";
 
 const FormRegister = () => {
   const [email, setEmail] = useState("");
@@ -12,23 +13,20 @@ const FormRegister = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Reset des erreurs
-    setSuccessMessage(""); // Reset des messages de succès
+    setErrorMessage("");
+    setSuccessMessage("");
 
-    // Validation des champs avant d'envoyer au backend
     if (password !== controlPassword) {
       setErrorMessage("Les mots de passe ne correspondent pas.");
       return;
     }
 
     try {
-      // Appel API vers le backend pour l'inscription
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}api/user/register`,
         { email, pseudo, password }
       );
 
-      // Si réussite, affichage du message de succès
       setSuccessMessage("Inscription réussie ! Vous pouvez maintenant vous connecter.");
       setEmail("");
       setPseudo("");
@@ -124,6 +122,7 @@ const FormRegister = () => {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current" />
           </button>
         </div>
+        <BouttonGoogleRegister />
         <p className="signup">
           Vous possédez un compte ?{" "}
           <a rel="noopener noreferrer" href="/login" className="link">
@@ -138,14 +137,17 @@ const FormRegister = () => {
 const StyledWrapper = styled.div`
   .form-container {
     position: absolute;
-    bottom: 150px;
-    right: 500px;
-    height: 600px;
-    width: 400px;
-    border-radius: 0.75rem;
+    top: 30%;
+    left: 50%;  /* Centrage horizontal */
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem;
     background-color: #f7f7f7;
-    padding: 2rem;
-    color: #333; /* dark gray text */
+    border-radius: 0.75rem;
+    color: #333;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
   }
 
   .title {
@@ -153,7 +155,7 @@ const StyledWrapper = styled.div`
     font-size: 1.5rem;
     line-height: 2rem;
     font-weight: 700;
-    color: #00698f; /* blue title */
+    color: #00698f;
   }
 
   .form {
@@ -168,52 +170,31 @@ const StyledWrapper = styled.div`
 
   .input-group label {
     display: block;
-    color: #666; /* dark gray label */
+    color: #666;
     margin-bottom: 4px;
   }
 
   .input-group input {
     width: 100%;
     border-radius: 0.375rem;
-    border: 1px solid #ccc; /* light gray border */
+    border: 1px solid #ccc;
     outline: 0;
-    background-color: #f7f7f7; /* light gray background */
+    background-color: #f7f7f7;
     padding: 0.75rem 1rem;
-    color: #333; /* dark gray text */
+    color: #333;
   }
 
   .input-group input:focus {
-    border-color: #00698f; /* blue border on focus */
-  }
-
-  .forgot {
-    display: flex;
-    justify-content: flex-end;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    color: #666; /* dark gray forgot password */
-    margin: 8px 0 14px 0;
-  }
-
-  .forgot a,
-  .signup a {
-    color: #333; /* dark gray link */
-    text-decoration: none;
-    font-size: 14px;
-  }
-
-  .forgot a:hover,
-  .signup a:hover {
-    text-decoration: underline #00698f; /* blue underline on hover */
+    border-color: #00698f;
   }
 
   .sign {
     display: block;
     width: 100%;
-    background-color: #00698f; /* blue button */
+    background-color: #00698f;
     padding: 0.75rem;
     text-align: center;
-    color: #fff; /* white text */
+    color: #fff;
     border: none;
     border-radius: 0.375rem;
     font-weight: 600;
@@ -224,12 +205,13 @@ const StyledWrapper = styled.div`
     display: flex;
     align-items: center;
     padding-top: 1rem;
+    justify-content: center;
   }
 
   .line {
     height: 1px;
     flex: 1 1 0%;
-    background-color: #ccc; /* light gray line */
+    background-color: #ccc;
   }
 
   .social-message .message {
@@ -237,12 +219,13 @@ const StyledWrapper = styled.div`
     padding-right: 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: #666; /* dark gray social message */
+    color: #666;
   }
 
   .social-icons {
     display: flex;
     justify-content: center;
+    margin-top: 1rem;
   }
 
   .social-icons .icon {
@@ -256,17 +239,71 @@ const StyledWrapper = styled.div`
   .social-icons .icon svg {
     height: 1.25rem;
     width: 1.25rem;
-    fill: #fff; /* white icon */
+    fill: #fff;
   }
 
   .signup {
-    position: absolute;
-    bottom: 10px;
-    right: 95px;
     text-align: center;
     font-size: 0.75rem;
     line-height: 1rem;
-    color: #666; /* dark gray signup */
-  }`;
+    color: #666;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .form-container {
+      top: 50%;  /* Ajuste la position verticale pour les petits écrans */
+      transform: translate(-50%, -50%);  /* Centrage horizontal et vertical */
+    }
+
+    .title {
+      font-size: 1.25rem;
+    }
+
+    .input-group input {
+      padding: 0.75rem;
+    }
+
+    .sign {
+      padding: 0.75rem;
+      font-size: 1rem;
+    }
+
+    .social-message .message {
+      font-size: 0.75rem;
+    }
+
+    .signup {
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .form-container {
+      width: 90%;  /* Réduire la largeur à 90% sur les très petits écrans */
+    }
+
+    .title {
+      font-size: 1.1rem;
+    }
+
+    .input-group input {
+      padding: 0.75rem;
+    }
+
+    .sign {
+      padding: 0.75rem;
+      font-size: 1rem;
+    }
+
+    .social-message .message {
+      font-size: 0.75rem;
+    }
+
+    .signup {
+      font-size: 0.7rem;
+    }
+  }
+`;
 
 export default FormRegister;

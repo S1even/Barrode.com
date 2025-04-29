@@ -1,16 +1,29 @@
 "use client";
 import createGlobe from "cobe";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Cobe() {
   const canvasRef = useRef();
+  const containerRef = useRef();
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+
     let phi = 0;
     let width = 0;
-    const onResize = () =>
-      canvasRef.current && (width = canvasRef.current.offsetWidth);
+    const onResize = () => {
+      if (!containerRef.current) return;
+      width = containerRef.current.offsetWidth;
+    };
     window.addEventListener("resize", onResize);
     onResize();
+
     const globe = createGlobe(canvasRef.current, {
       devicePixelRatio: 2,
       width: width * 2,
@@ -26,30 +39,35 @@ export function Cobe() {
       glowColor: [1.2, 1.2, 1.2],
       markers: [],
       onRender: (state) => {
-        // Called on every animation frame.
-        // `state` will be an empty object, return updated params.
         state.phi = phi;
         phi += 0.005;
         state.width = width * 2;
         state.height = width * 2;
       },
     });
-    setTimeout(() => (canvasRef.current.style.opacity = "1"));
+
+    setTimeout(() => (canvasRef.current.style.opacity = "1"), 500);
+
     return () => {
       globe.destroy();
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", checkScreen);
     };
   }, []);
+
   return (
     <div
+      ref={containerRef}
       style={{
         width: "100%",
-        maxWidth: 600,
-        aspectRatio: 1,
-        margin: "auto",
+        maxWidth: "600px",
+        aspectRatio: "1",
         position: "relative",
+        marginLeft: isMobile ? "auto" : "0",
+        marginRight: isMobile ? "auto" : "0",
+        left: isMobile ? "0" : "300px",
         top: "110px",
-        left: "-350px"
+        transition: "all 0.5s ease",
       }}
     >
       <canvas

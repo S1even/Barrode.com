@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '../actions/user.actions';
 import { useNavigate } from 'react-router-dom';
+import ButtonGoogle from './ButtonGoogle';
 
 const Form = () => {
   const [email, setEmail] = useState('');
@@ -66,6 +67,7 @@ const Form = () => {
           <p className="message">Ou</p>
           <div className="line" />
         </div>
+        <ButtonGoogle />
         <p className="signup">
           Vous ne possédez pas de compte ?
           <a rel="noopener noreferrer" href="/register" className="link"> Crée un compte</a>
@@ -86,12 +88,12 @@ const StyledWrapper = styled.div`
     background-color: #f7f7f7;
     padding: 2rem;
     color: #333;
+    transition: all 0.3s ease-in-out;
   }
 
   .title {
     text-align: center;
     font-size: 1.5rem;
-    line-height: 2rem;
     font-weight: 700;
     color: #00698f;
   }
@@ -101,9 +103,8 @@ const StyledWrapper = styled.div`
   }
 
   .input-group {
-    margin-top: 0.25rem;
+    margin-top: 0.75rem;
     font-size: 0.875rem;
-    line-height: 1.25rem;
   }
 
   .input-group label {
@@ -116,35 +117,14 @@ const StyledWrapper = styled.div`
     width: 100%;
     border-radius: 0.375rem;
     border: 1px solid #ccc;
-    outline: 0;
     background-color: #f7f7f7;
     padding: 0.75rem 1rem;
     color: #333;
+    outline: none;
   }
 
   .input-group input:focus {
     border-color: #00698f;
-  }
-
-  .forgot {
-    display: flex;
-    justify-content: flex-end;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    color: #666;
-    margin: 8px 0 14px 0;
-  }
-
-  .forgot a,
-  .signup a {
-    color: #333;
-    text-decoration: none;
-    font-size: 14px;
-  }
-
-  .forgot a:hover,
-  .signup a:hover {
-    text-decoration: underline #00698f;
   }
 
   .sign {
@@ -168,45 +148,73 @@ const StyledWrapper = styled.div`
 
   .line {
     height: 1px;
-    flex: 1 1 0%;
+    flex: 1;
     background-color: #ccc;
   }
 
   .social-message .message {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+    padding: 0 0.75rem;
     font-size: 0.875rem;
-    line-height: 1.25rem;
     color: #666;
-  }
-
-  .social-icons {
-    display: flex;
-    justify-content: center;
-  }
-
-  .social-icons .icon {
-    border-radius: 0.125rem;
-    padding: 0.75rem;
-    border: none;
-    background-color: transparent;
-    margin-left: 8px;
-  }
-
-  .social-icons .icon svg {
-    height: 1.25rem;
-    width: 1.25rem;
-    fill: #fff;
   }
 
   .signup {
     position: absolute;
     bottom: 20px;
     right: 75px;
-    text-align: center;
     font-size: 0.75rem;
-    line-height: 1rem;
     color: #666;
-  }`;
+  }
+
+  .signup .link {
+    margin-left: 5px;
+    color: #00698f;
+    text-decoration: none;
+  }
+
+  .signup .link:hover {
+    text-decoration: underline;
+  }
+
+  .error-message {
+    margin-top: 10px;
+    color: red;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+
+
+  @media screen and (max-width: 768px) {
+    .form-container {
+      position: static;
+      margin: 100px auto 40px;
+      width: 90%;
+      max-width: 400px;
+      bottom: unset;
+      right: unset;
+    }
+
+    .signup {
+      position: static;
+      text-align: center;
+      margin-top: 20px;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .form-container {
+      padding: 1.5rem;
+    }
+
+    .title {
+      font-size: 1.25rem;
+    }
+
+    .sign {
+      font-size: 0.9rem;
+    }
+  }
+`;
+
 
 export default Form;

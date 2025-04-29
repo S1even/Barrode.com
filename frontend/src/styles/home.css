@@ -1,24 +1,11 @@
-.home-containerHome {
-  background: radial-gradient(circle, #cbcdd0 30%, #ffffff 100%);
-  min-height: 100vh;
-  overflow: visible;
-}
-
-html, body {
-    height: 100%;
-    margin: 0;
-  }
-  
-  #root {
-    height: 100%;
-  }
-
 .image-class {
-    width: 100%;
-    max-width: 350px;
-    height: auto;
-    margin-top: 30px;
-    margin-left: 70px;
+  width: 100%;
+  max-width: 350px;
+  height: auto;
+  position: relative;
+  left: -55px; /* Position à gauche */
+  top: -20px;
+  object-fit: contain;
 }
 
 .image-classPF {
@@ -27,4 +14,26 @@ html, body {
   height: auto;
   margin-top: 10px;
   margin-left: 30px;
+}
+
+@media (max-width: 768px) {
+  .image-container {
+    padding-left: 90px; /* Décalage réduit sur écrans moyens */
+  }
+  
+  .image-class {
+    width: 85%;
+    max-width: 300px; /* Réduit la taille max pour s'adapter aux écrans moyens */
+  }
+}
+
+@media (max-width: 480px) {
+  .image-container {
+    padding-left: 30px; /* Moins de décalage sur petits écrans pour éviter les débordements */
+  }
+  
+  .image-class {
+    width: 90%; /* Augmente la largeur pour mieux voir l'image */
+    max-width: 280px; /* Réduit davantage la taille max */
+  }
 }

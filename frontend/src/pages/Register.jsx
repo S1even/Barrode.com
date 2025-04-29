@@ -4,7 +4,6 @@ import '../styles/home.css'
 import '../styles/index.css'
 import Image from '../styles/assets/img/BanniereBarrode.png'
 import FormRegister from '../components/FormRegister'
-import ButtonGoogleRegister from '../components/BouttonGoogleRegister'
 
 const Register = () => {
   return (
@@ -12,8 +11,6 @@ const Register = () => {
       <img src={Image} alt="Image Headder" className="image-class" />
       <Cobe />
       <FormRegister />
-      <FormRegister />
-      <ButtonGoogleRegister />
     </div>
   );
 };

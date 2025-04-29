@@ -13,17 +13,17 @@ exports.checkUser = (req, res, next) => {
           } else {
               let user = await UserModel.findById(decodedToken.id);
               
-              // Normalisation des données utilisateur
               if (user) {
-                  // Si l'utilisateur a un name mais pas de pseudo (cas Google), utilisez name comme pseudo
                   if (!user.pseudo && user.name) {
                       user.pseudo = user.name;
                   }
+
+                  if (user.fromGoogle && !user.picture.startsWith('data:')) {
+                  }
                   
-                  // Assurez-vous que le pseudo est inclus dans les données utilisateur
                   res.locals.user = {
                       ...user._doc,
-                      pseudo: user.pseudo || user.name // Fallback au name si nécessaire
+                      pseudo: user.pseudo || user.name 
                   };
               } else {
                   res.locals.user = null;
@@ -52,11 +52,10 @@ exports.requireAuth = async (req, res, next) => {
       _id: decodedToken.id.toString()
     };
     
-    // Important: stocker l'ID et l'utilisateur complet
     const user = await UserModel.findById(decodedToken.id);
     if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
 
-    req.user = user; // Stocker l'utilisateur complet
+    req.user = user;
     res.locals.user = user;
     
     next();

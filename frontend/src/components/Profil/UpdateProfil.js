@@ -51,6 +51,7 @@ const UpdateProfil = () => {
                 console.log("Erreur de chargement d'image, utilisation de l'image par défaut");
                 e.target.src = defaultProfileImage;
               }}
+              referrerPolicy="no-referrer"
             />
           ) : (
             <img 

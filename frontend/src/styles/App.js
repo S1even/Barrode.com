@@ -10,20 +10,21 @@ const App = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const fetchToken = async () => {
+    const fetchUid = async () => {
       try {
         const res = await axios.get(`${process.env.REACT_APP_API_URL}jwtid`, {
           withCredentials: true,
         });
         setUid(res.data);
-        dispatch(checkUserLoggedIn());
       } catch (err) {
-        console.log("No token");
+        console.log("Utilisateur non connecté");
       }
     };
-  
-    fetchToken();
 
+    fetchUid();
+  }, []);
+
+  useEffect(() => {
     if (uid) dispatch(getUser(uid));
   }, [uid, dispatch]);
 
@@ -31,7 +32,7 @@ const App = () => {
     <UidContext.Provider value={uid}>
       <Routes />
     </UidContext.Provider>
-  )
-}
+  );
+};
 
 export default App;

@@ -44,7 +44,7 @@ export const logoutUser = () => {
 export const checkUserLoggedIn = () => {
   return (dispatch) => {
     return axios
-      .get(`${process.env.REACT_APP_API_URL}api/user/me`, { withCredentials: true })
+    .get(`/api/user/me`, { withCredentials: true })
       .then((res) => {
         console.log("Données utilisateur chargées :", res.data);
         // Stocker les données utilisateur dans Redux

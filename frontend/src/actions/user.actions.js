@@ -13,7 +13,7 @@ export const LOGOUT_USER = "LOGOUT_USER";
 export const loginUser = (email, password) => {
   return (dispatch) => {
     return axios
-      .post(`${process.env.REACT_APP_API_URL}api/user/login`, { email, password }, { withCredentials: true })
+      .post(`/api/user/login`, { email, password })
       .then((res) => {
         dispatch({ type: "LOGIN_USER", payload: res.data.user });
         return res.data;

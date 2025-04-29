@@ -19,7 +19,7 @@ const app = express();
 
 
 const corsOptions = {
-  origin: process.env.CLIENT_URL,
+  origin: "https://barrode-com.vercel.app",
   credentials: true,
   allowedHeaders: ['sessionId', 'Content-Type', 'Authorization'],
   exposedHeaders: ['sessionId'],

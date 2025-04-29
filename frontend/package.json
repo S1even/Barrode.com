@@ -13,7 +13,6 @@
     "cloc": "^2.4.0-cloc",
     "cobe": "^0.6.3",
     "leaflet": "^1.9.4",
-    "node-sass": "^7.0.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-infinite-scroll-component": "^6.1.0",
@@ -25,7 +24,7 @@
     "redux": "^5.0.1",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^3.1.0",
-    "sass": "^1.86.3",
+    "sass": "^1.87.0",
     "styled-components": "^6.1.17",
     "web-vitals": "^2.1.4"
   },

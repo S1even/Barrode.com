@@ -8,7 +8,8 @@ const express = require("express");
  const cookieParser = require("cookie-parser");
  const { checkUser, requireAuth } = require("./middleware/auth.middleware");
  const cors = require("cors");
- 
+ const MongoStore = require('connect-mongo');
+
  const port = process.env.PORT || 5001;
  const userRoutes = require("./routes/user.routes");
  const postRoutes = require("./routes/post.routes");
@@ -35,16 +36,20 @@ const express = require("express");
  
  
  app.use(session({
-   secret: process.env.SESSION_SECRET || "monSecret",
-   resave: false,
-   saveUninitialized: false,
-   cookie: {
-     httpOnly: true,
-     secure: true,
-     ssameSite: 'none',
-     maxAge: 24 * 60 * 60 * 1000, // 1 jour
-   }
- }));
+  secret: process.env.SESSION_SECRET || "monSecret",
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: "sessions"
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: 24 * 60 * 60 * 1000, // 1 jour
+  }
+}));
  app.use(passport.initialize());
  app.use(passport.session());
  

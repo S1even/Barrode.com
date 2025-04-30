@@ -1,184 +1,172 @@
 import axios from "../utils/axios";
 
-// posts
-export const GET_POSTS = "GET_POSTS";
-export const GET_ALL_POSTS = "GET_ALL_POSTS";
-export const ADD_POST = "ADD_POST";
-export const LIKE_POST = "LIKE_POST";
-export const UNLIKE_POST = "UNLIKE_POST";
-export const UPDATE_POST = "UPDATE_POST";
-export const DELETE_POST = "DELETE_POST";
+// User action types
+export const GET_USER = "GET_USER";
+export const UPLOAD_PICTURE = "UPLOAD_PICTURE";
+export const UPDATE_BIO = "UPDATE_BIO";
+export const FOLLOW_USER = "FOLLOW_USER";
+export const UNFOLLOW_USER = "UNFOLLOW_USER";
+export const GET_USER_ERRORS = "GET_USER_ERRORS";
+export const GET_USERS = "GET_USERS";
+export const LOGIN_USER = "LOGIN_USER";
+export const LOGOUT_USER = "LOGOUT_USER";
 
-// comments
-export const ADD_COMMENT = "ADD_COMMENT";
-export const EDIT_COMMENT = "EDIT_COMMENT";
-export const DELETE_COMMENT = "DELETE_COMMENT";
-
-// trends
-export const GET_TRENDS = "GET_TRENDS";
-
-// errors
-export const GET_POST_ERRORS = "GET_POST_ERRORS";
-
-export const getPosts = (page = 1, limit = 5) => {
-  return async (dispatch) => {
-    try {
-      const res = await axios.get(
-        `/api/post?page=${page}&limit=${limit}`
-      );
-
-      dispatch({ type: GET_POSTS, payload: res.data });
-
-      return res.data;
-    } catch (err) {
-      console.log(err);
-    }
-  };
-};
-
-export const addPost = (data) => {
-  return (dispatch, getState) => {
-    const userId = getState().userReducer._id;
-    const formData = data;
-    if (formData instanceof FormData && !formData.has('posterId')) {
-      formData.append('posterId', userId);
-    }
-
+// Connexion
+export const loginUser = (email, password) => {
+  return (dispatch) => {
     return axios
-      .post(`/api/post/`, data, {
-        withCredentials: true
-      })
+      .post(`/api/user/login`, { email, password })
       .then((res) => {
-        if (res.data.errors) {
-          dispatch({ type: GET_POST_ERRORS, payload: res.data.errors });
-        } else {
-          dispatch({ type: GET_POST_ERRORS, payload: "" });
-          dispatch(getPosts());
-        }
-      })
-      .catch(err => {
-        console.error("Erreur lors de l'envoi du post:", err);
-        dispatch({ type: GET_POST_ERRORS, payload: err.response?.data?.errors || "Erreur inconnue" });
-      });
-  };
-};
-
-export const likePost = (postId, userId) => {
-  return (dispatch) => {
-    return axios({
-      method: "patch",
-      url: `/api/post/like-post/${postId}`,
-      data: { id: userId },
-      withCredentials: true,
-    })
-      .then(() => {
-        dispatch({ type: LIKE_POST, payload: { postId, userId } });
+        dispatch({ type: LOGIN_USER, payload: res.data.user });
+        return res.data;
       })
       .catch((err) => {
-        console.error("Like error:", err);
+        console.error("Erreur lors de la connexion :", err);
+        throw err;
       });
   };
 };
 
-export const unlikePost = (postId, userId) => {
+// Déconnexion
+export const logoutUser = () => {
   return (dispatch) => {
-    return axios({
-      method: "patch",
-      url: `/api/post/unlike-post/${postId}`,
-      data: { id: userId },
-      withCredentials: true,
-    })
+    axios.get(`/api/user/logout`, { withCredentials: true })
       .then(() => {
-        dispatch({ type: UNLIKE_POST, payload: { postId, userId } });
+        console.log("Utilisateur déconnecté");
+        dispatch({ type: LOGOUT_USER });
       })
       .catch((err) => {
-        console.error("Unlike error:", err);
+        console.error("Erreur lors de la déconnexion :", err);
+        dispatch({ type: LOGOUT_USER });
       });
   };
 };
 
-export const updatePost = (postId, message) => {
+// Vérification de l'état de connexion au chargement de l'app
+export const checkUserLoggedIn = () => {
+  return (dispatch) => {
+    return axios
+    .get(`/api/user/me`, { withCredentials: true })
+      .then((res) => {
+        console.log("Données utilisateur chargées :", res.data);
+        // Stocker les données utilisateur dans Redux
+        dispatch({ type: GET_USER, payload: res.data });
+        return res.data;
+      })
+      .catch((err) => {
+        console.error("Erreur lors de la vérification de l'authentification :", err);
+        dispatch({ type: LOGOUT_USER });
+        return null;
+      });
+  };
+};
+
+// Récupération de tous les utilisateurs
+export const getUsers = () => {
+  return (dispatch) => {
+    return axios
+      .get(`/api/user`, { withCredentials: true })
+      .then((res) => {
+        console.log("Liste des utilisateurs récupérée :", res.data);
+        dispatch({ type: GET_USERS, payload: res.data });
+      })
+      .catch((err) => {
+        console.error("Erreur lors de la récupération des utilisateurs :", err);
+      });
+  };
+};
+
+// Récupération des données d'un utilisateur spécifique
+export const getUser = () => async (dispatch) => {
+  try {
+    const res = await axios.get(`/api/user/me`, { withCredentials: true });
+    dispatch({ type: GET_USER, payload: res.data });
+  } catch (err) {
+    console.error("Erreur lors du getUser :", err);
+  }
+};
+
+// Mise à jour de la bio utilisateur
+export const updateBio = (userId, bio) => {
+  console.log("Mise à jour de la bio pour ID :", userId, "Bio :", bio);
   return (dispatch) => {
     return axios({
       method: "put",
-      url: `/api/post/${postId}`,
-      data: { message },
-      withCredentials: true,
+      url: `/api/user/` + userId,
+      data: { bio },
+      withCredentials: true
     })
       .then((res) => {
-        dispatch({ type: UPDATE_POST, payload: { message, postId } });
+        console.log("Réponse mise à jour bio :", res.data);
+        dispatch({ type: UPDATE_BIO, payload: bio });
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.error("Erreur lors de la mise à jour de la bio :", err);
+      });
   };
 };
 
-export const deletePost = (postId) => {
+// Upload de l'image utilisateur
+export const uploadPicture = (data, id) => {
+  console.log("Upload de la photo de profil pour ID :", id);
   return (dispatch) => {
-    return axios({
-      method: "delete",
-      url: `/api/post/${postId}`,
-      withCredentials: true,
-    })
+    return axios
+      .post(`/api/user/upload`, data, { withCredentials: true })
       .then((res) => {
-        dispatch({ type: DELETE_POST, payload: { postId } });
+        console.log("Réponse upload image :", res.data);
+        if (res.data.errors) {
+          console.error("Erreurs de validation de l'image :", res.data.errors);
+          dispatch({ type: GET_USER_ERRORS, payload: res.data.errors });
+        } else {
+          dispatch({ type: GET_USER_ERRORS, payload: "" });
+          return axios
+            .get(`/api/user/${id}`, { withCredentials: true })
+            .then((res) => {
+              console.log("Nouvelle photo de profil récupérée :", res.data.picture);
+              dispatch({ type: UPLOAD_PICTURE, payload: res.data.picture });
+            });
+        }
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.error("Erreur lors du téléchargement de l'image :", err);
+      });
   };
 };
 
-export const addComment = (postId, commenterId, text, commenterPseudo) => {
-  return (dispatch) => {
-    return axios({
-      method: "patch",
-      url: `/api/post/comment-post/${postId}`,
-      data: { commenterId, text, commenterPseudo },
-      withCredentials: true,
-    })
-      .then((res) => {
-        dispatch({ 
-          type: ADD_COMMENT, 
-          payload: { 
-            postId,
-            comment: res.data.comment || { commenterId, text, commenterPseudo, timestamp: Date.now() } 
-          } 
-        });
-      })
-      .catch((err) => console.log(err));
-  };
-};
-
-export const editComment = (postId, commentid, text) => {
+export const followUser = (followerId, idToFollow) => {
+  console.log("Demande de suivi utilisateur :", idToFollow, "par :", followerId);
   return (dispatch) => {
     return axios({
       method: "patch",
-      url: `/api/post/edit-comment-post/${postId}`,
-      data: { commentid, text },
-      withCredentials: true,
+      url: `/api/user/follow/` + followerId,
+      data: { idToFollow },
+      withCredentials: true
     })
       .then((res) => {
-        dispatch({ type: EDIT_COMMENT, payload: { postId, commentid, text } });
+        console.log("Réponse suivi utilisateur :", res.data);
+        dispatch({ type: FOLLOW_USER, payload: { idToFollow } });
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.error("Erreur lors du suivi utilisateur :", err);
+      });
   };
 };
 
-export const deleteComment = (postId, commentid) => {
+export const unfollowUser = (followerId, idToUnfollow) => {
+  console.log("Demande d'arrêt de suivi utilisateur :", idToUnfollow, "par :", followerId);
   return (dispatch) => {
     return axios({
       method: "patch",
-      url: `/api/post/delete-comment-post/${postId}`,
-      data: { commentid },
-      withCredentials: true,
+      url: `/api/user/unfollow/` + followerId,
+      data: { idToUnfollow },
+      withCredentials: true
     })
       .then((res) => {
-        dispatch({ type: DELETE_COMMENT, payload: { postId, commentid } });
+        console.log("Réponse arrêt de suivi utilisateur :", res.data);
+        dispatch({ type: UNFOLLOW_USER, payload: { idToUnfollow } });
       })
-      .catch((err) => console.log(err));
-  };
-};
-
-export const getTrends = (sortedArray) => {
-  return (dispatch) => {
-    dispatch({ type: GET_TRENDS, payload: sortedArray });
+      .catch((err) => {
+        console.error("Erreur lors de l'arrêt du suivi utilisateur :", err);
+      });
   };
 };

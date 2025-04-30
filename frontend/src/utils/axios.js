@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: "/",
+  baseURL: process.env.REACT_APP_API_URL || 'https://barrodecom-production.up.railway.app',
   withCredentials: true
 });
 

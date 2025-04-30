@@ -45,7 +45,7 @@ export const addPost = (data) => {
     }
 
     return axios
-      .post(`/api/post/`, data, {
+      .post(`https://barrodecom-production.up.railway.app/api/post/`, data, {
         withCredentials: true
       })
       .then((res) => {

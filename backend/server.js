@@ -73,3 +73,7 @@ const express = require("express");
  app.use((req, res) => {
    res.status(404).json({ error: "Route not found" });
  });
+
+ app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});

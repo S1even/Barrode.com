@@ -39,7 +39,12 @@ export const getPosts = (page = 1, limit = 5) => {
 export const addPost = (data) => {
   return async (dispatch, getState) => {
     try {
-      const userId = getState().userReducer._id;
+      const userData = getState().userReducer.user;
+      const userId = userData && userData._id ? 
+        (typeof userData._id === 'object' && userData._id._id ? 
+          userData._id._id.toString() : userData._id.toString()) 
+        : null;
+      
       if (!userId) {
         console.error("Erreur : userId introuvable");
         return;
@@ -51,7 +56,7 @@ export const addPost = (data) => {
       }
 
       const res = await axios.post(
-        `https://barrodecom-production.up.railway.app/api/post/`,
+        `/api/post/`,
         formData,
         {
           withCredentials: true,

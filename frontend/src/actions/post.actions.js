@@ -37,29 +37,41 @@ export const getPosts = (page = 1, limit = 5) => {
 };
 
 export const addPost = (data) => {
-  return (dispatch, getState) => {
-    const userId = getState().userReducer._id;
-    const formData = data;
-    if (formData instanceof FormData && !formData.has('posterId')) {
-      formData.append('posterId', userId);
-    }
+  return async (dispatch, getState) => {
+    try {
+      const userId = getState().userReducer._id;
+      if (!userId) {
+        console.error("Erreur : userId introuvable");
+        return;
+      }
 
-    return axios
-      .post(`https://barrodecom-production.up.railway.app/api/post/`, data, {
-        withCredentials: true
-      })
-      .then((res) => {
-        if (res.data.errors) {
-          dispatch({ type: GET_POST_ERRORS, payload: res.data.errors });
-        } else {
-          dispatch({ type: GET_POST_ERRORS, payload: "" });
-          dispatch(getPosts());
+      const formData = data instanceof FormData ? data : new FormData();
+      if (!formData.has('posterId')) {
+        formData.append('posterId', userId);
+      }
+
+      const res = await axios.post(
+        `https://barrodecom-production.up.railway.app/api/post/`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
         }
-      })
-      .catch(err => {
-        console.error("Erreur lors de l'envoi du post:", err);
-        dispatch({ type: GET_POST_ERRORS, payload: err.response?.data?.errors || "Erreur inconnue" });
-      });
+      );
+
+      if (res.data.errors) {
+        dispatch({ type: GET_POST_ERRORS, payload: res.data.errors });
+      } else {
+        dispatch({ type: GET_POST_ERRORS, payload: "" });
+        dispatch(getPosts());
+      }
+    } catch (err) {
+      console.error("Erreur lors de l'envoi du post:", err);
+      const errorMessage = err.response?.data?.errors || "Erreur réseau ou inconnue";
+      dispatch({ type: GET_POST_ERRORS, payload: errorMessage });
+    }
   };
 };
 

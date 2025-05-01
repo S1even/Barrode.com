@@ -19,7 +19,7 @@ The website is deployed [Barrode.com](https://barrode-com.vercel.app/login)
 
 
 | Front end | Back end | 
-| :---------------: |:---------------:| |
+| :---------------: |:---------------:|
 | React | Node.js|
 | CSS | Express.js |
 |Leaflet library| 

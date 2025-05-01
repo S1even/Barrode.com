@@ -18,12 +18,13 @@ The website is deployed [Barrode.com](https://barrode-com.vercel.app/login)
 
 
 
-| Front end | Back end | Data base |
-| :---------------: |:---------------:| |:---------------:|
-| React | Node.js| MongoDB
+| Front end | Back end | 
+| :---------------: |:---------------:| |
+| React | Node.js|
 | CSS | Express.js |
 |Leaflet library| 
 
+For the DataBase i used MongoDB
 
 ### API I used
 
@@ -37,3 +38,11 @@ The website is deployed [Barrode.com](https://barrode-com.vercel.app/login)
 
 <p align="center">The entire project was developed by myself.</p>
 <p align="center">Thank you for reading !</p>
+
+
+
+
+
+
+
+

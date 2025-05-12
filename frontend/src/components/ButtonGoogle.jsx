@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const ButtonGoogle = () => {
   return (
     <StyledWrapper>
-      <Link to="http://localhost:5001/auth/google" className="google-button-link">
+      <Link to="https://barrodecom-production.up.railway.app/auth/google" className="google-button-link">
         <button className="google-button">
           <img
             src="https://developers.google.com/identity/images/g-logo.png"

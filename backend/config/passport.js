@@ -1,4 +1,7 @@
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const UserModel = require("../models/user.model");
+
 
 console.log("Vérification du modèle utilisateur:", 
   UserModel ? "Modèle chargé correctement" : "ERREUR: Modèle non défini");

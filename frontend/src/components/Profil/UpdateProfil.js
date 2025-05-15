@@ -5,6 +5,12 @@ import { dateParser } from "../Utils";
 import FollowHandler from "./FollowHandler";
 import UploadImg from "./UploadImg";
 
+// Fonction utilitaire pour normaliser les IDs - ajoutée ici comme dans Card.jsx
+const normalizeId = (id) => {
+  if (!id) return "";
+  return typeof id === 'object' && id._id ? id._id.toString() : id.toString();
+};
+
 const UpdateProfil = () => {
   const [bio, setBio] = useState("");
   const [updateForm, setUpdateForm] = useState(false);
@@ -19,16 +25,27 @@ const UpdateProfil = () => {
 
   const defaultProfileImage = "/img/random-user.png";
 
+  // Normaliser l'ID utilisateur
+  const userId = userData ? normalizeId(userData._id) : "";
+
   useEffect(() => {
     if (userData?.bio) {
       setBio(userData.bio);
     }
   }, [userData?.bio]);
 
+  useEffect(() => {
+    console.log("userData dans UpdateProfil:", userData);
+    console.log("ID normalisé:", userId);
+  }, [userData, userId]);
+
   const handleUpdate = () => {
-    if (userData?._id && bio !== userData?.bio) {
-      dispatch(updateBio(userData._id, bio));
+    if (userId && bio !== userData?.bio) {
+      console.log("Mise à jour de la bio pour l'utilisateur:", userId);
+      dispatch(updateBio(userId, bio));
       setUpdateForm(false);
+    } else {
+      console.error("Impossible de mettre à jour la bio. ID manquant ou bio inchangée.");
     }
   };
 
@@ -38,7 +55,7 @@ const UpdateProfil = () => {
 
   return (
     <div className="profil-container">
-      <h1>Profil de {userData.pseudo || "l'utilisateur"}</h1>
+      <h1>Profil de {userData.pseudo || userData.name || "l'utilisateur"}</h1>
       <div className="update-container">
         <div className="left-part">
           <h3>Photo de profil</h3>
@@ -119,18 +136,23 @@ const UpdateProfil = () => {
             </span>
             <ul>
               {users?.map((followedUser) => {
-                if (userData.following?.includes(followedUser._id)) {
+                // Normaliser les IDs pour les comparaisons
+                const followedUserId = normalizeId(followedUser._id);
+                // Vérifier si l'ID de l'utilisateur suivi est dans le tableau following
+                const isFollowed = userData.following?.some(id => normalizeId(id) === followedUserId);
+                
+                if (isFollowed) {
                   return (
-                    <li key={followedUser._id}>
+                    <li key={followedUserId}>
                       <img 
                         src={followedUser.picture || defaultProfileImage} 
                         alt="user-pic" 
                         onError={(e) => { e.target.src = defaultProfileImage; }}
                       />
-                      <h4>{followedUser.pseudo}</h4>
+                      <h4>{followedUser.pseudo || followedUser.name}</h4>
                       <div className="follow-handler">
                         <FollowHandler 
-                          idToFollow={followedUser._id} 
+                          idToFollow={followedUserId} 
                           type="suggestion" 
                         />
                       </div>
@@ -156,18 +178,23 @@ const UpdateProfil = () => {
             </span>
             <ul>
               {users?.map((follower) => {
-                if (userData.followers?.includes(follower._id)) {
+                // Normaliser les IDs pour les comparaisons
+                const followerId = normalizeId(follower._id);
+                // Vérifier si l'ID du follower est dans le tableau followers
+                const isFollower = userData.followers?.some(id => normalizeId(id) === followerId);
+                
+                if (isFollower) {
                   return (
-                    <li key={follower._id}>
+                    <li key={followerId}>
                       <img 
                         src={follower.picture || defaultProfileImage} 
                         alt="user-pic"
                         onError={(e) => { e.target.src = defaultProfileImage; }}
                       />
-                      <h4>{follower.pseudo}</h4>
+                      <h4>{follower.pseudo || follower.name}</h4>
                       <div className="follow-handler">
                         <FollowHandler 
-                          idToFollow={follower._id} 
+                          idToFollow={followerId} 
                           type="suggestion" 
                         />
                       </div>

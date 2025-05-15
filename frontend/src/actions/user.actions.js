@@ -11,6 +11,12 @@ export const GET_USERS = "GET_USERS";
 export const LOGIN_USER = "LOGIN_USER";
 export const LOGOUT_USER = "LOGOUT_USER";
 
+// Fonction utilitaire pour normaliser les IDs
+const normalizeId = (id) => {
+  if (!id) return "";
+  return typeof id === 'object' && id._id ? id._id.toString() : id.toString();
+};
+
 // Connexion
 export const loginUser = (email, password) => {
   return (dispatch) => {
@@ -88,6 +94,7 @@ export const getUser = () => async (dispatch) => {
 
 // Mise à jour de la bio utilisateur
 export const updateBio = (userId, bio) => {
+  userId = normalizeId(userId); // Normaliser l'ID avant utilisation
   console.log("Mise à jour de la bio pour ID :", userId, "Bio :", bio);
   return (dispatch) => {
     return axios({
@@ -108,6 +115,7 @@ export const updateBio = (userId, bio) => {
 
 // Upload de l'image utilisateur
 export const uploadPicture = (data, id) => {
+  id = normalizeId(id); // Normaliser l'ID avant utilisation
   console.log("Upload de la photo de profil pour ID :", id);
   return (dispatch) => {
     return axios
@@ -134,6 +142,8 @@ export const uploadPicture = (data, id) => {
 };
 
 export const followUser = (followerId, idToFollow) => {
+  followerId = normalizeId(followerId); // Normaliser l'ID avant utilisation
+  idToFollow = normalizeId(idToFollow); // Normaliser l'ID avant utilisation
   console.log("Demande de suivi utilisateur :", idToFollow, "par :", followerId);
   return (dispatch) => {
     return axios({
@@ -153,6 +163,8 @@ export const followUser = (followerId, idToFollow) => {
 };
 
 export const unfollowUser = (followerId, idToUnfollow) => {
+  followerId = normalizeId(followerId); // Normaliser l'ID avant utilisation
+  idToUnfollow = normalizeId(idToUnfollow); // Normaliser l'ID avant utilisation
   console.log("Demande d'arrêt de suivi utilisateur :", idToUnfollow, "par :", followerId);
   return (dispatch) => {
     return axios({

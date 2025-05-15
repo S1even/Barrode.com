@@ -52,12 +52,23 @@ export const logoutUser = () => {
 export const checkUserLoggedIn = () => {
   return (dispatch) => {
     return axios
-    .get(`/api/user/me`, { withCredentials: true })
+      .get(`/api/user/me`, { withCredentials: true })
       .then((res) => {
-        console.log("Données utilisateur chargées :", res.data);
+        console.log("Données utilisateur brutes :", res.data);
+        
+        // Vérification et normalisation des données utilisateur
+        const userData = res.data;
+        
+        // S'assurer que l'utilisateur a un ID valide dans un format standardisé
+        if (userData && userData._id) {
+          console.log("ID utilisateur détecté :", userData._id);
+        } else if (userData && userData.googleId) {
+          console.log("ID Google détecté mais pas d'ID MongoDB :", userData.googleId);
+        }
+        
         // Stocker les données utilisateur dans Redux
-        dispatch({ type: GET_USER, payload: res.data });
-        return res.data;
+        dispatch({ type: GET_USER, payload: userData });
+        return userData;
       })
       .catch((err) => {
         console.error("Erreur lors de la vérification de l'authentification :", err);

@@ -11,7 +11,16 @@ import MapViewer from "../MapViewer";
 // Fonction utilitaire pour normaliser les IDs
 const normalizeId = (id) => {
   if (!id) return "";
-  return typeof id === 'object' && id._id ? id._id.toString() : id.toString();
+  if (typeof id === 'object') {
+    if (id._id) return id._id.toString();
+    if (id.id) return id.id.toString();
+    for (const key in id) {
+      if (key.toLowerCase().includes('id') && typeof id[key] === 'string') {
+        return id[key];
+      }
+    }
+  }
+  return id.toString();
 };
 
 const Card = ({ post }) => {
@@ -27,7 +36,10 @@ const Card = ({ post }) => {
   const dispatch = useDispatch();
   
   // Normaliser l'ID utilisateur depuis Redux
-  const uid = userData && userData._id ? normalizeId(userData._id) : "";
+  const uid = userData ? (
+    userData._id ? normalizeId(userData._id) : 
+    (userData.googleId ? userData.googleId : "")
+  ) : "";
 
   useEffect(() => {
     if (!isEmpty(usersData[0])) setIsLoading(false);
@@ -51,6 +63,10 @@ const Card = ({ post }) => {
   useEffect(() => {
     console.log("userData from Redux:", userData);
     console.log("User ID (uid):", uid);
+    console.log("User ID type:", typeof uid);
+    if (uid === "" && userData) {
+      console.log("Structure complète de userData:", JSON.stringify(userData, null, 2));
+    }
   }, [userData, uid]);
 
   const handleLike = (e) => {

@@ -22,11 +22,14 @@ passport.use(new GoogleStrategy({
       user = await UserModel.create({
         googleId: profile.id,
         email: profile.emails[0].value,
-        name: profile.displayName,        // Gardez le champ name
-        pseudo: profile.displayName,      // AJOUT: utilisez displayName comme pseudo
+        name: profile.displayName,
+        pseudo: profile.displayName,
         picture: profile.photos[0].value,
         refreshToken: typeof cleanRefreshToken === "string" ? cleanRefreshToken : undefined
       });
+      
+      // Vérifier que l'utilisateur a bien été créé avec un ID MongoDB
+      console.log("Nouvel utilisateur Google créé avec ID:", user._id);
     } else if (typeof cleanRefreshToken === "string") {
       user.refreshToken = cleanRefreshToken;
       
@@ -36,19 +39,14 @@ passport.use(new GoogleStrategy({
       }
       
       await user.save();
+      console.log("Utilisateur Google existant mis à jour avec ID:", user._id);
     }
 
-    return done(null, user);
+    // Conversion explicite en objet simple pour éviter les problèmes avec les documents Mongoose
+    const userObj = user.toObject();
+    return done(null, userObj);
   } catch (err) {
+    console.error("Erreur d'authentification Google:", err);
     done(err, null);
   }
 }));
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  const user = await UserModel.findById(id);
-  done(null, user);
-});

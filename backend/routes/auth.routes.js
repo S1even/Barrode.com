@@ -46,7 +46,7 @@ router.get(
       });
       
 
-      res.redirect(`${process.env.CLIENT_URL}`);
+      res.redirect(`${process.env.CLIENT_URL}/feed`);
     } catch (err) {
       console.error("Erreur lors de la création du JWT après Google Auth:", err);
       res.redirect(`${process.env.CLIENT_URL}/login-error`);

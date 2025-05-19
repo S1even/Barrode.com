@@ -1,6 +1,5 @@
-const UserModel = require("../models/user.model");
-const ObjectID = require("mongoose").Types.ObjectId;
-const jwt = require("jsonwebtoken");
+const User = require("../models/user.model");
+
 
 module.exports.getMe = async (req, res) => {
   try {

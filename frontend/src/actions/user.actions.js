@@ -21,11 +21,19 @@ export const loginUser = (email, password) => {
     return axios
       .post(`/api/user/login`, { email, password }, { withCredentials: true })
       .then((res) => {
-        dispatch({ type: LOGIN_USER, payload: res.data.user });
-        return dispatch(checkUserLoggedIn());
+        console.log("Réponse de login :", res.data);
+        
+        if (res.data.user) {
+          dispatch({ type: LOGIN_USER, payload: res.data.user });
+          console.log("Utilisateur connecté :", res.data.user);
+          return res.data.user;
+        } else {
+          throw new Error("Données utilisateur manquantes dans la réponse");
+        }
       })
       .catch((err) => {
         console.error("Erreur lors de la connexion :", err);
+        dispatch({ type: LOGOUT_USER });
         throw err;
       });
   };
@@ -49,7 +57,6 @@ export const logoutUser = () => {
         document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
       });
       
-      // 4. Déconnexion Google (si connecté via Google)
       if (window.gapi && window.gapi.auth2) {
         const authInstance = window.gapi.auth2.getAuthInstance();
         if (authInstance && authInstance.isSignedIn.get()) {
@@ -58,7 +65,6 @@ export const logoutUser = () => {
         }
       }
       
-
       window.location.href = '/login';
       
       console.log("Déconnexion complète effectuée");

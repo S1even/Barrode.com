@@ -10,20 +10,19 @@ export const GET_USERS = "GET_USERS";
 export const LOGIN_USER = "LOGIN_USER";
 export const LOGOUT_USER = "LOGOUT_USER";
 
-
 const normalizeId = (id) => {
   if (!id) return "";
   return typeof id === 'object' && id._id ? id._id.toString() : id.toString();
 };
 
-// Connexion
+// Connexion normale
 export const loginUser = (email, password) => {
   return (dispatch) => {
     return axios
       .post(`/api/user/login`, { email, password }, { withCredentials: true })
       .then((res) => {
         dispatch({ type: LOGIN_USER, payload: res.data.user });
-        return res.data;
+        return dispatch(checkUserLoggedIn());
       })
       .catch((err) => {
         console.error("Erreur lors de la connexion :", err);
@@ -32,22 +31,54 @@ export const loginUser = (email, password) => {
   };
 };
 
-// Déconnexion
+// Déconnexion améliorée
 export const logoutUser = () => {
-  return (dispatch) => {
-    return axios.get(`/api/user/logout`, { withCredentials: true })
-      .then(() => {
-        console.log("Utilisateur déconnecté");
-        dispatch({ type: LOGOUT_USER });
-      })
-      .catch((err) => {
-        console.error("Erreur lors de la déconnexion :", err);
-        dispatch({ type: LOGOUT_USER });
+  return async (dispatch) => {
+    try {
+
+      await axios.get(`/api/user/logout`, { withCredentials: true });
+      
+
+      dispatch({ type: LOGOUT_USER });
+      
+
+      document.cookie.split(";").forEach((c) => {
+        const eqPos = c.indexOf("=");
+        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
       });
+      
+      // 4. Déconnexion Google (si connecté via Google)
+      if (window.gapi && window.gapi.auth2) {
+        const authInstance = window.gapi.auth2.getAuthInstance();
+        if (authInstance && authInstance.isSignedIn.get()) {
+          await authInstance.signOut();
+          console.log("Déconnexion Google effectuée");
+        }
+      }
+      
+
+      window.location.href = '/login';
+      
+      console.log("Déconnexion complète effectuée");
+    } catch (err) {
+      console.error("Erreur lors de la déconnexion :", err);
+
+      dispatch({ type: LOGOUT_USER });
+      
+      document.cookie.split(";").forEach((c) => {
+        const eqPos = c.indexOf("=");
+        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+      });
+      
+      window.location.href = '/login';
+    }
   };
 };
 
-
+// Vérification d'authentification
 export const checkUserLoggedIn = () => {
   return (dispatch) => {
     return axios
@@ -61,10 +92,8 @@ export const checkUserLoggedIn = () => {
           return null;
         }
         
-        // Debug des cookies
         console.log("Cookies disponibles:", document.cookie);
         
-
         dispatch({ type: GET_USER, payload: res.data });
         return res.data;
       })
@@ -76,7 +105,7 @@ export const checkUserLoggedIn = () => {
   };
 };
 
-
+// Récupération des utilisateurs
 export const getUsers = () => {
   return (dispatch) => {
     return axios
@@ -91,17 +120,20 @@ export const getUsers = () => {
   };
 };
 
-
+// Récupération de l'utilisateur actuel
 export const getUser = () => async (dispatch) => {
   try {
     const res = await axios.get(`/api/user/me`, { withCredentials: true });
     dispatch({ type: GET_USER, payload: res.data });
+    return res.data;
   } catch (err) {
     console.error("Erreur lors du getUser :", err);
+    dispatch({ type: LOGOUT_USER });
+    return null;
   }
 };
 
-
+// Mise à jour de la bio
 export const updateBio = (userId, bio) => {
   userId = normalizeId(userId);
   console.log("Mise à jour de la bio pour ID :", userId, "Bio :", bio);
@@ -122,7 +154,7 @@ export const updateBio = (userId, bio) => {
   };
 };
 
-
+// Upload de photo de profil
 export const uploadPicture = (data, id) => {
   id = normalizeId(id);
   console.log("Upload de la photo de profil pour ID :", id);
@@ -150,6 +182,7 @@ export const uploadPicture = (data, id) => {
   };
 };
 
+// Suivre un utilisateur
 export const followUser = (followerId, idToFollow) => {
   followerId = normalizeId(followerId);
   idToFollow = normalizeId(idToFollow);
@@ -171,6 +204,7 @@ export const followUser = (followerId, idToFollow) => {
   };
 };
 
+// Ne plus suivre un utilisateur
 export const unfollowUser = (followerId, idToUnfollow) => {
   followerId = normalizeId(followerId);
   idToUnfollow = normalizeId(idToUnfollow);

@@ -26,8 +26,8 @@ router.get("/google/callback", passport.authenticate("google", {
   res.cookie('jwt', token, { 
     httpOnly: true, 
     maxAge: maxAge * 1000, 
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    secure: true,
+    sameSite: 'none'
   });
   
   // Log pour debugging

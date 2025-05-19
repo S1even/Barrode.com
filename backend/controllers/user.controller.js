@@ -2,266 +2,295 @@ const UserModel = require("../models/user.model");
 const ObjectID = require("mongoose").Types.ObjectId;
 const jwt = require("jsonwebtoken");
 
-module.exports.getAllUsers = async (req, res) => {
-    const users = await UserModel.find().select("-password");
-    res.status(200).json(users);
-}
-
-module.exports.loginUser = async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const user = await UserModel.findOne({ email });
-  
-      if (!user || !(await user.comparePassword(password))) {
-        return res.status(401).json({ message: "Identifiants invalides" });
-      }
-  
-      // Générer un access token
-      const token = jwt.sign(
-        { id: user._id },
-        process.env.TOKEN_SECRET,
-        { expiresIn: "3d" }
-      );
-  
-      // Stocker le token dans un cookie httpOnly
-      res.cookie("jwt", token, {
-        httpOnly: true,
-        maxAge: 3 * 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict"
-      });
-  
-      // Générer un refresh token
-      const refreshToken = jwt.sign(
-        { id: user._id },
-        process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: "7d" }
-      );
-  
-      // Stocker le refresh token dans un cookie
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours en millisecondes
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict"
-      });
-  
-      // Retourner l'utilisateur
-      res.status(200).json({
-        user: {
-          id: user._id,
-          pseudo: user.pseudo,
-        }
-      });
-    } catch (error) {
-      console.error("Erreur lors de la connexion :", error);
-      res.status(500).json({ message: "Erreur serveur" });
-    }
-  };
-
-module.exports.userInfo = async (req, res) => {
-    console.log(req.params);
-    if (!ObjectID.isValid(req.params.id)) {
-        return res.status(400).send("ID unknow : " + req.params.id);
-    }
-
-    try {
-        const user = await UserModel.findById(req.params.id).select("-password");
-        if (!user) {
-            return res.status(404).send("User not found");
-        }
-        res.status(200).json(user);
-    } catch (error) {
-        console.log("ID unknow : " + error);
-        res.status(500).send("Server error");
-    }
-};
-
-// Function Getme
 module.exports.getMe = async (req, res) => {
   try {
-    if (req.user && req.user._id) {
-      const userData = {
-        ...req.user._doc || req.user,
-        pseudo: req.user.pseudo || req.user.name
-      };
-      return res.status(200).json(userData);
+
+    if (!req.user) {
+      return res.status(401).json({ 
+        message: "Utilisateur non authentifié",
+        authenticated: false 
+      });
     }
-    
-    const userId = req.user?.id || req.user;
-    const user = await UserModel.findById(userId).select("-password");
-    
-    if (!user) {
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
-    }
-    
-    const userData = {
-      ...user._doc,
-      pseudo: user.pseudo || user.name
+
+
+    const userResponse = {
+      _id: req.user._id,
+      pseudo: req.user.pseudo || req.user.name,
+      email: req.user.email,
+      bio: req.user.bio || "",
+      picture: req.user.picture || "./uploads/profil/random-user.png",
+      followers: req.user.followers || [],
+      following: req.user.following || [],
+      likes: req.user.likes || [],
+
+      googleId: req.user.googleId || null,
+      authProvider: req.user.googleId ? 'google' : 'local'
     };
-    
-    res.status(200).json(userData);
-  } catch (err) {
-    console.error("Erreur getMe:", err);
-    res.status(500).json({ error: err.message });
+
+    console.log("Données utilisateur récupérées:", {
+      id: userResponse._id,
+      pseudo: userResponse.pseudo,
+      email: userResponse.email,
+      authProvider: userResponse.authProvider
+    });
+
+    res.status(200).json(userResponse);
+
+  } catch (error) {
+    console.error("Erreur lors de la récupération des données utilisateur:", error);
+    res.status(500).json({ 
+      message: "Erreur serveur lors de la récupération des données utilisateur",
+      error: error.message 
+    });
   }
 };
 
+module.exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find()
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+
+    const normalizedUsers = users.map(user => ({
+      _id: user._id,
+      pseudo: user.pseudo || user.name,
+      email: user.email,
+      bio: user.bio || "",
+      picture: user.picture || "./uploads/profil/random-user.png",
+      followers: user.followers || [],
+      following: user.following || [],
+      likes: user.likes || [],
+      googleId: user.googleId || null,
+      authProvider: user.googleId ? 'google' : 'local',
+      createdAt: user.createdAt
+    }));
+
+    res.status(200).json(normalizedUsers);
+
+  } catch (error) {
+    console.error("Erreur lors de la récupération des utilisateurs:", error);
+    res.status(500).json({ 
+      message: "Erreur serveur lors de la récupération des utilisateurs",
+      error: error.message 
+    });
+  }
+};
+
+module.exports.userInfo = async (req, res) => {
+  try {
+    if (!req.params.id || !req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ 
+        message: "ID utilisateur invalide" 
+      });
+    }
+
+    const user = await User.findById(req.params.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ 
+        message: "Utilisateur introuvable" 
+      });
+    }
+
+
+    const userResponse = {
+      _id: user._id,
+      pseudo: user.pseudo || user.name,
+      email: user.email,
+      bio: user.bio || "",
+      picture: user.picture || "./uploads/profil/random-user.png",
+      followers: user.followers || [],
+      following: user.following || [],
+      likes: user.likes || [],
+      googleId: user.googleId || null,
+      authProvider: user.googleId ? 'google' : 'local',
+      createdAt: user.createdAt
+    };
+
+    res.status(200).json(userResponse);
+
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
+    res.status(500).json({ 
+      message: "Erreur serveur lors de la récupération de l'utilisateur",
+      error: error.message 
+    });
+  }
+};
 
 module.exports.updateUser = async (req, res) => {
-    console.log(req.params);
-    if (!ObjectID.isValid(req.params.id)) {
-        return res.status(400).send("ID unknown : " + req.params.id);
+  try {
+    if (!req.params.id || !req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ 
+        message: "ID utilisateur invalide" 
+      });
     }
-    
-    try {
-        const updatedUser = await UserModel.findOneAndUpdate(
-            { _id: req.params.id },
-            {
-                $set: {
-                    bio: req.body.bio
-                }
-            },
-            { new: true, upsert: true, setDefaultsOnInsert: true }
-        );
 
-        if (!updatedUser) {
-            return res.status(404).send("User not found");
-        }
 
-        return res.status(200).json(updatedUser);
-    } catch (error) {
-        return res.status(500).json({ message: error.message || error });
+    if (req.user._id.toString() !== req.params.id) {
+      return res.status(403).json({ 
+        message: "Vous ne pouvez modifier que vos propres données" 
+      });
     }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ 
+        message: "Utilisateur introuvable" 
+      });
+    }
+
+
+    const userResponse = {
+      _id: user._id,
+      pseudo: user.pseudo || user.name,
+      email: user.email,
+      bio: user.bio || "",
+      picture: user.picture || "./uploads/profil/random-user.png",
+      followers: user.followers || [],
+      following: user.following || [],
+      likes: user.likes || [],
+      googleId: user.googleId || null,
+      authProvider: user.googleId ? 'google' : 'local'
+    };
+
+    console.log("Utilisateur mis à jour:", {
+      id: userResponse._id,
+      pseudo: userResponse.pseudo
+    });
+
+    res.status(200).json(userResponse);
+
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+    res.status(500).json({ 
+      message: "Erreur serveur lors de la mise à jour",
+      error: error.message 
+    });
+  }
 };
 
 module.exports.deleteUser = async (req, res) => {
-    if (!ObjectID.isValid(req.params.id)) {
-        return res.status(400).send("ID unknown : " + req.params.id);
+  try {
+    if (!req.params.id || !req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ 
+        message: "ID utilisateur invalide" 
+      });
     }
 
-    try {
-        const deletedUser = await UserModel.findByIdAndDelete(req.params.id);
+    const user = await User.findByIdAndDelete(req.params.id);
 
-        if (!deletedUser) {
-            return res.status(404).send("User not found");
-        }
-
-        res.status(200).json({ message: "Successfully deleted." });
-    } catch (error) {
-        return res.status(500).json({ message: error.message || error });
+    if (!user) {
+      return res.status(404).json({ 
+        message: "Utilisateur introuvable" 
+      });
     }
+
+    res.status(200).json({ 
+      message: "Utilisateur supprimé avec succès" 
+    });
+
+  } catch (error) {
+    console.error("Erreur lors de la suppression de l'utilisateur:", error);
+    res.status(500).json({ 
+      message: "Erreur serveur lors de la suppression",
+      error: error.message 
+    });
+  }
 };
 
-
 module.exports.follow = async (req, res) => {
-  console.log("Tentative de follow avec :", {
-    "req.params.id": req.params.id,
-    "req.body.idToFollow": req.body.idToFollow,
-    "validité de params.id": ObjectID.isValid(req.params.id),
-    "validité de idToFollow": ObjectID.isValid(req.body.idToFollow)
-  });
-
-  if (!ObjectID.isValid(req.params.id) || !ObjectID.isValid(req.body.idToFollow)) {
-    return res.status(400).json({ message: "Invalid user ID" });
-  }
-
   try {
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      req.params.id,
-      { $addToSet: { following: req.body.idToFollow } },
+    const followerId = req.user._id;
+    const { idToFollow } = req.body;
+
+    if (!idToFollow || !idToFollow.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ 
+        message: "ID à suivre invalide" 
+      });
+    }
+
+    if (followerId.toString() === idToFollow) {
+      return res.status(400).json({ 
+        message: "Vous ne pouvez pas vous suivre vous-même" 
+      });
+    }
+
+
+    await User.findByIdAndUpdate(
+      followerId,
+      { $addToSet: { following: idToFollow } },
       { new: true, upsert: true }
     );
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
 
-    const updatedFollowedUser = await UserModel.findByIdAndUpdate(
-      req.body.idToFollow,
-      { $addToSet: { followers: req.params.id } },
+    await User.findByIdAndUpdate(
+      idToFollow,
+      { $addToSet: { followers: followerId } },
       { new: true, upsert: true }
     );
 
-    if (!updatedFollowedUser) {
-      return res.status(404).json({ message: "Followed user not found" });
-    }
+    console.log(`Utilisateur ${followerId} suit maintenant ${idToFollow}`);
 
-    res.status(201).json({ message: "Follow successful", user: updatedUser });
+    res.status(200).json({ 
+      message: "Suivi ajouté avec succès",
+      followerId,
+      idToFollow 
+    });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    console.error("Erreur lors du suivi:", error);
+    res.status(500).json({ 
+      message: "Erreur serveur lors du suivi",
+      error: error.message 
+    });
   }
 };
 
 module.exports.unfollow = async (req, res) => {
-  if (!ObjectID.isValid(req.params.id) || !ObjectID.isValid(req.body.idToUnfollow)) {
-    return res.status(400).json({ message: "Invalid user ID" });
-  }
-
   try {
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      req.params.id,
-      { $pull: { following: req.body.idToUnfollow } },
-      { new: true, upsert: true }
-    );
+    const followerId = req.user._id;
+    const { idToUnfollow } = req.body;
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+    if (!idToUnfollow || !idToUnfollow.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ 
+        message: "ID à ne plus suivre invalide" 
+      });
     }
 
-    const updatedFollowedUser = await UserModel.findByIdAndUpdate(
-      req.body.idToUnfollow,
-      { $pull: { followers: req.params.id } },
-      { new: true, upsert: true }
+
+    await User.findByIdAndUpdate(
+      followerId,
+      { $pull: { following: idToUnfollow } },
+      { new: true }
     );
 
-    if (!updatedFollowedUser) {
-      return res.status(404).json({ message: "Followed user not found" });
-    }
 
-    res.status(201).json({ message: "Unfollow successful", user: updatedUser });
+    await User.findByIdAndUpdate(
+      idToUnfollow,
+      { $pull: { followers: followerId } },
+      { new: true }
+    );
+
+    console.log(`Utilisateur ${followerId} ne suit plus ${idToUnfollow}`);
+
+    res.status(200).json({ 
+      message: "Suivi retiré avec succès",
+      followerId,
+      idToUnfollow 
+    });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    console.error("Erreur lors de l'arrêt du suivi:", error);
+    res.status(500).json({ 
+      message: "Erreur serveur lors de l'arrêt du suivi",
+      error: error.message 
+    });
   }
 };
-
-
-module.exports.logoutUser = (req, res) => {
-    res.clearCookie("jwt");
-    res.status(200).json({ message: "Déconnexion réussie" });
-  };
-
-  module.exports.refreshToken = async (req, res) => {
-    const refreshToken = req.cookies.refreshToken;
-  
-    if (!refreshToken) {
-      return res.status(401).json({ message: "Refresh token manquant" });
-    }
-  
-    try {
-      const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-      
-      // Générer un nouveau token
-      const newToken = jwt.sign(
-        { id: decoded.id },
-        process.env.TOKEN_SECRET,
-        { expiresIn: "3d" }
-      );
-  
-      // Réponse avec un nouveau cookie contenant le JWT
-      res.cookie("jwt", newToken, {
-        httpOnly: true,
-        maxAge: 3 * 24 * 60 * 60 * 1000, // 3jours en millisecondes
-        secure: process.env.NODE_ENV === "production", // Sécurisé en production (https)
-        sameSite: "strict" // Empêche l'envoi de cookies dans des requêtes inter-domaines
-      });
-  
-      res.status(200).json({ message: "Token rafraîchi avec succès" });
-    } catch (error) {
-      console.error("Erreur lors du rafraîchissement du token :", error);
-      res.clearCookie("jwt");
-      res.clearCookie("refreshToken");
-      res.status(403).json({ message: "Token invalide" });
-    }
-  };
-  

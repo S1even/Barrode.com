@@ -1,98 +1,88 @@
-const UserModel = require('../models/user.model');
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const User = require("../models/user.model");
 
-
-const normalizeUserId = async (id) => {
-  if (!id) return null;
-  
+module.exports.requireAuth = async (req, res, next) => {
   try {
 
-    let user = await UserModel.findById(id);
-    
+    const token = req.cookies.jwt;
+
+    if (!token) {
+      console.log("Aucun token JWT trouvé dans les cookies");
+      return res.status(401).json({ 
+        message: "Token d'authentification requis",
+        authenticated: false 
+      });
+    }
+
+
+    const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
+    console.log("Token décodé:", decodedToken);
+
+
+    const user = await User.findById(decodedToken.id);
 
     if (!user) {
-      user = await UserModel.findOne({ googleId: id });
-    }
-    
-    return user ? user._id : null;
-  } catch (err) {
-    console.error("Erreur de normalisation d'ID:", err);
-    return null;
-  }
-};
-
-exports.checkUser = async (req, res, next) => {
-  const token = req.cookies.jwt;
-  res.locals.user = null;
-
-  if (!token) {
-    return next();
-  }
-
-  try {
-    const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
-    const userId = decodedToken.id;
-    
-
-    let user = await UserModel.findById(userId);
-    
-
-    if (!user && userId.length > 15) {
-      user = await UserModel.findOne({ googleId: userId });
-    }
-    
-    if (user) {
-
-      if (!user.pseudo && user.name) {
-        user.pseudo = user.name;
-        await user.save();
-      }
-      
-
-      res.locals.user = user;
-    }
-    
-    next();
-  } catch (err) {
-    console.error("Erreur de vérification du token:", err);
-    res.clearCookie("jwt");
-    next();
-  }
-};
-
-exports.requireAuth = async (req, res, next) => {
-
-  const token = req.cookies.jwt || 
-    (req.headers.authorization && req.headers.authorization.startsWith("Bearer ") ? 
-      req.headers.authorization.split(" ")[1] : null);
-
-  if (!token) {
-    return res.status(403).json({ message: "Token manquant" });
-  }
-
-  try {
-    const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
-    const userId = decodedToken.id;
-    
-
-    let user = await UserModel.findById(userId);
-    
-
-    if (!user && userId.length > 15) {
-      user = await UserModel.findOne({ googleId: userId });
-    }
-    
-    if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouvé" });
+      console.log("Utilisateur introuvable pour l'ID:", decodedToken.id);
+      return res.status(401).json({ 
+        message: "Utilisateur introuvable",
+        authenticated: false 
+      });
     }
 
 
     req.user = user;
-    res.locals.user = user;
-    
+    console.log("Utilisateur authentifié:", {
+      id: user._id,
+      pseudo: user.pseudo || user.name,
+      email: user.email
+    });
+
     next();
-  } catch (err) {
-    console.error("Erreur d'authentification:", err);
-    return res.status(403).json({ message: "Token invalide" });
+
+  } catch (error) {
+    console.error("Erreur lors de la vérification du token:", error);
+
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ 
+        message: "Token invalide",
+        authenticated: false 
+      });
+    }
+
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ 
+        message: "Token expiré",
+        authenticated: false 
+      });
+    }
+
+    res.status(500).json({ 
+      message: "Erreur serveur lors de l'authentification",
+      authenticated: false,
+      error: error.message 
+    });
+  }
+};
+
+
+module.exports.optionalAuth = async (req, res, next) => {
+  try {
+    const token = req.cookies.jwt;
+
+    if (token) {
+      const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
+      const user = await User.findById(decodedToken.id);
+      
+      if (user) {
+        req.user = user;
+      }
+    }
+
+    next();
+  } catch (error) {
+
+    console.log("Erreur lors de l'authentification optionnelle:", error.message);
+    next();
   }
 };

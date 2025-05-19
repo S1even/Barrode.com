@@ -1,46 +1,70 @@
 const UserModel = require('../models/user.model');
 const jwt = require('jsonwebtoken');
 
-exports.checkUser = (req, res, next) => {
+
+const normalizeUserId = async (id) => {
+  if (!id) return null;
+  
+  try {
+
+    let user = await UserModel.findById(id);
+    
+
+    if (!user) {
+      user = await UserModel.findOne({ googleId: id });
+    }
+    
+    return user ? user._id : null;
+  } catch (err) {
+    console.error("Erreur de normalisation d'ID:", err);
+    return null;
+  }
+};
+
+exports.checkUser = async (req, res, next) => {
   const token = req.cookies.jwt;
+  res.locals.user = null;
 
-  if (token) {
-      jwt.verify(token, process.env.TOKEN_SECRET, async (err, decodedToken) => {
-          if (err) {
-              res.locals.user = null;
-              res.clearCookie("jwt");
-              return next();
-          } else {
-              let user = await UserModel.findById(decodedToken.id);
-              
-              if (user) {
-                  if (!user.pseudo && user.name) {
-                      user.pseudo = user.name;
-                  }
+  if (!token) {
+    return next();
+  }
 
-                  if (user.fromGoogle && !user.picture.startsWith('data:')) {
-                  }
-                  
-                  res.locals.user = {
-                      ...user._doc,
-                      pseudo: user.pseudo || user.name 
-                  };
-              } else {
-                  res.locals.user = null;
-              }
-              
-              return next();
-          }
-      });
-  } else {
-      res.locals.user = null;
-      return next();
+  try {
+    const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
+    const userId = decodedToken.id;
+    
+
+    let user = await UserModel.findById(userId);
+    
+
+    if (!user && userId.length > 15) {
+      user = await UserModel.findOne({ googleId: userId });
+    }
+    
+    if (user) {
+
+      if (!user.pseudo && user.name) {
+        user.pseudo = user.name;
+        await user.save();
+      }
+      
+
+      res.locals.user = user;
+    }
+    
+    next();
+  } catch (err) {
+    console.error("Erreur de vérification du token:", err);
+    res.clearCookie("jwt");
+    next();
   }
 };
 
 exports.requireAuth = async (req, res, next) => {
-  const token = req.cookies.jwt || (req.headers.authorization && req.headers.authorization.startsWith("Bearer ") ? 
-    req.headers.authorization.split(" ")[1] : null);
+
+  const token = req.cookies.jwt || 
+    (req.headers.authorization && req.headers.authorization.startsWith("Bearer ") ? 
+      req.headers.authorization.split(" ")[1] : null);
 
   if (!token) {
     return res.status(403).json({ message: "Token manquant" });
@@ -48,18 +72,27 @@ exports.requireAuth = async (req, res, next) => {
 
   try {
     const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
-    req.user = {
-      _id: decodedToken.id.toString()
-    };
+    const userId = decodedToken.id;
     
-    const user = await UserModel.findById(decodedToken.id);
-    if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
+
+    let user = await UserModel.findById(userId);
+    
+
+    if (!user && userId.length > 15) {
+      user = await UserModel.findOne({ googleId: userId });
+    }
+    
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+
 
     req.user = user;
     res.locals.user = user;
     
     next();
   } catch (err) {
+    console.error("Erreur d'authentification:", err);
     return res.status(403).json({ message: "Token invalide" });
   }
 };

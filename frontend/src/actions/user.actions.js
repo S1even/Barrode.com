@@ -1,6 +1,5 @@
 import axios from "../utils/axios";
 
-// User action types
 export const GET_USER = "GET_USER";
 export const UPLOAD_PICTURE = "UPLOAD_PICTURE";
 export const UPDATE_BIO = "UPDATE_BIO";
@@ -11,7 +10,7 @@ export const GET_USERS = "GET_USERS";
 export const LOGIN_USER = "LOGIN_USER";
 export const LOGOUT_USER = "LOGOUT_USER";
 
-// Fonction utilitaire pour normaliser les IDs
+
 const normalizeId = (id) => {
   if (!id) return "";
   return typeof id === 'object' && id._id ? id._id.toString() : id.toString();
@@ -21,7 +20,7 @@ const normalizeId = (id) => {
 export const loginUser = (email, password) => {
   return (dispatch) => {
     return axios
-      .post(`/api/user/login`, { email, password })
+      .post(`/api/user/login`, { email, password }, { withCredentials: true })
       .then((res) => {
         dispatch({ type: LOGIN_USER, payload: res.data.user });
         return res.data;
@@ -36,7 +35,7 @@ export const loginUser = (email, password) => {
 // Déconnexion
 export const logoutUser = () => {
   return (dispatch) => {
-    axios.get(`/api/user/logout`, { withCredentials: true })
+    return axios.get(`/api/user/logout`, { withCredentials: true })
       .then(() => {
         console.log("Utilisateur déconnecté");
         dispatch({ type: LOGOUT_USER });
@@ -48,7 +47,7 @@ export const logoutUser = () => {
   };
 };
 
-// Vérification de l'état de connexion au chargement de l'app
+
 export const checkUserLoggedIn = () => {
   return (dispatch) => {
     return axios
@@ -56,19 +55,18 @@ export const checkUserLoggedIn = () => {
       .then((res) => {
         console.log("Données utilisateur brutes :", res.data);
         
-        // Vérification et normalisation des données utilisateur
-        const userData = res.data;
-        
-        // S'assurer que l'utilisateur a un ID valide dans un format standardisé
-        if (userData && userData._id) {
-          console.log("ID utilisateur détecté :", userData._id);
-        } else if (userData && userData.googleId) {
-          console.log("ID Google détecté mais pas d'ID MongoDB :", userData.googleId);
+        if (!res.data || (!res.data._id && !res.data.googleId)) {
+          console.log("Aucun utilisateur connecté détecté");
+          dispatch({ type: LOGOUT_USER });
+          return null;
         }
         
-        // Stocker les données utilisateur dans Redux
-        dispatch({ type: GET_USER, payload: userData });
-        return userData;
+        // Debug des cookies
+        console.log("Cookies disponibles:", document.cookie);
+        
+
+        dispatch({ type: GET_USER, payload: res.data });
+        return res.data;
       })
       .catch((err) => {
         console.error("Erreur lors de la vérification de l'authentification :", err);
@@ -78,7 +76,7 @@ export const checkUserLoggedIn = () => {
   };
 };
 
-// Récupération de tous les utilisateurs
+
 export const getUsers = () => {
   return (dispatch) => {
     return axios
@@ -93,7 +91,7 @@ export const getUsers = () => {
   };
 };
 
-// Récupération des données d'un utilisateur spécifique
+
 export const getUser = () => async (dispatch) => {
   try {
     const res = await axios.get(`/api/user/me`, { withCredentials: true });
@@ -103,9 +101,9 @@ export const getUser = () => async (dispatch) => {
   }
 };
 
-// Mise à jour de la bio utilisateur
+
 export const updateBio = (userId, bio) => {
-  userId = normalizeId(userId); // Normaliser l'ID avant utilisation
+  userId = normalizeId(userId);
   console.log("Mise à jour de la bio pour ID :", userId, "Bio :", bio);
   return (dispatch) => {
     return axios({
@@ -124,9 +122,9 @@ export const updateBio = (userId, bio) => {
   };
 };
 
-// Upload de l'image utilisateur
+
 export const uploadPicture = (data, id) => {
-  id = normalizeId(id); // Normaliser l'ID avant utilisation
+  id = normalizeId(id);
   console.log("Upload de la photo de profil pour ID :", id);
   return (dispatch) => {
     return axios
@@ -153,8 +151,8 @@ export const uploadPicture = (data, id) => {
 };
 
 export const followUser = (followerId, idToFollow) => {
-  followerId = normalizeId(followerId); // Normaliser l'ID avant utilisation
-  idToFollow = normalizeId(idToFollow); // Normaliser l'ID avant utilisation
+  followerId = normalizeId(followerId);
+  idToFollow = normalizeId(idToFollow);
   console.log("Demande de suivi utilisateur :", idToFollow, "par :", followerId);
   return (dispatch) => {
     return axios({
@@ -174,8 +172,8 @@ export const followUser = (followerId, idToFollow) => {
 };
 
 export const unfollowUser = (followerId, idToUnfollow) => {
-  followerId = normalizeId(followerId); // Normaliser l'ID avant utilisation
-  idToUnfollow = normalizeId(idToUnfollow); // Normaliser l'ID avant utilisation
+  followerId = normalizeId(followerId);
+  idToUnfollow = normalizeId(idToUnfollow);
   console.log("Demande d'arrêt de suivi utilisateur :", idToUnfollow, "par :", followerId);
   return (dispatch) => {
     return axios({

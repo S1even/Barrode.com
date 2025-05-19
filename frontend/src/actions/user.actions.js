@@ -19,21 +19,13 @@ const normalizeId = (id) => {
 export const loginUser = (email, password) => {
   return (dispatch) => {
     return axios
-      .post(`/api/user/login`, { email, password }, { withCredentials: true })
+      .post(`/api/user/login`, { email, password })
       .then((res) => {
-        console.log("Réponse de login :", res.data);
-        
-        if (res.data.user) {
-          dispatch({ type: LOGIN_USER, payload: res.data.user });
-          console.log("Utilisateur connecté :", res.data.user);
-          return res.data.user;
-        } else {
-          throw new Error("Données utilisateur manquantes dans la réponse");
-        }
+        dispatch({ type: LOGIN_USER, payload: res.data.user });
+        return res.data;
       })
       .catch((err) => {
         console.error("Erreur lors de la connexion :", err);
-        dispatch({ type: LOGOUT_USER });
         throw err;
       });
   };

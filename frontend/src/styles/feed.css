@@ -2,26 +2,26 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
   background: radial-gradient(circle, #cbcdd0 30%, #ffffff 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-size: cover;
   font-family: 'Inter', sans-serif;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
-
 
 .feed-page {
   display: flex;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .home-container {
   flex: 3;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .sticky-header {
@@ -31,16 +31,16 @@ html, body, #root {
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(5px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  width: 100%;
 }
 
 .scrollable-content {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 50px;
+  padding: 0 1rem 50px;
   scrollbar-width: thin;
 }
-
 
 .scrollable-content::-webkit-scrollbar {
   width: 6px;
@@ -60,7 +60,6 @@ html, body, #root {
   background: #a8a8a8;
 }
 
-
 .right-side {
   flex: 1;
   height: 100vh;
@@ -76,14 +75,11 @@ html, body, #root {
   top: 1rem;
 }
 
-
 .image-class {
   width: 100%;
   max-width: 350px;
   height: auto;
-  margin-top: 30px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 30px auto 0;
   display: block;
 }
 
@@ -91,14 +87,15 @@ html, body, #root {
   width: 100%;
   max-width: 350px;
   height: auto;
-  margin-top: 10px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 10px auto 0;
   display: block;
 }
 
-
 @media (max-width: 768px) {
+  html, body, #root {
+    overflow-y: auto;
+  }
+  
   .feed-page {
     flex-direction: column;
   }
@@ -117,9 +114,11 @@ html, body, #root {
     width: 100%;
   }
   
+  .scrollable-content {
+    padding: 0 0.8rem 40px;
+  }
+  
   .image-class, .image-classPF {
     max-width: 90%;
-    margin-left: auto;
-    margin-right: auto;
   }
 }

@@ -41,12 +41,10 @@ const Feed = () => {
   );
 };
 
-
 const FeedContainer = styled.div`
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
-  overflow: hidden;
   
   @media (max-width: 768px) {
     flex-direction: column;
@@ -57,7 +55,7 @@ const MainContent = styled.div`
   flex: 3;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   
   .sticky-header {
     position: sticky;
@@ -65,6 +63,7 @@ const MainContent = styled.div`
     z-index: 10;
     background: rgba(255, 255, 255, 0.95);
     border-bottom: 1px solid #eaeaea;
+    width: 100%;
   }
   
   .scrollable-content {
@@ -82,7 +81,7 @@ const MainContent = styled.div`
 
 const SideContent = styled.div`
   flex: 1;
-  height: 100vh;
+  min-height: 100vh;
   overflow-y: auto;
   border-left: 1px solid #eaeaea;
   padding: 1rem;
@@ -95,8 +94,9 @@ const SideContent = styled.div`
 const PostsList = styled.ul`
   list-style-type: none;
   padding: 0;
-  margin: 0;
+  margin: 0 auto;
   width: 100%;
+  max-width: 800px; /* Limite la largeur pour un meilleur affichage */
 `;
 
 export default Feed;

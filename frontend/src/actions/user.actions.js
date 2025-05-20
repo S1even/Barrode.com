@@ -82,15 +82,12 @@ export const checkUserLoggedIn = () => {
     return axios
       .get(`/api/user/me`, { withCredentials: true })
       .then((res) => {
-        console.log("Données utilisateur brutes :", res.data);
         
         if (!res.data || (!res.data._id && !res.data.googleId)) {
           console.log("Aucun utilisateur connecté détecté");
           dispatch({ type: LOGOUT_USER });
           return null;
         }
-        
-        console.log("Cookies disponibles:", document.cookie);
         
         dispatch({ type: GET_USER, payload: res.data });
         return res.data;
@@ -133,7 +130,6 @@ export const getUser = () => async (dispatch) => {
 // Mise à jour de la bio
 export const updateBio = (userId, bio) => {
   userId = normalizeId(userId);
-  console.log("Mise à jour de la bio pour ID :", userId, "Bio :", bio);
   return (dispatch) => {
     return axios({
       method: "put",
@@ -142,7 +138,6 @@ export const updateBio = (userId, bio) => {
       withCredentials: true
     })
       .then((res) => {
-        console.log("Réponse mise à jour bio :", res.data);
         dispatch({ type: UPDATE_BIO, payload: bio });
       })
       .catch((err) => {
@@ -154,12 +149,10 @@ export const updateBio = (userId, bio) => {
 // Upload de photo de profil
 export const uploadPicture = (data, id) => {
   id = normalizeId(id);
-  console.log("Upload de la photo de profil pour ID :", id);
   return (dispatch) => {
     return axios
       .post(`/api/user/upload`, data, { withCredentials: true })
       .then((res) => {
-        console.log("Réponse upload image :", res.data);
         if (res.data.errors) {
           console.error("Erreurs de validation de l'image :", res.data.errors);
           dispatch({ type: GET_USER_ERRORS, payload: res.data.errors });
@@ -168,7 +161,6 @@ export const uploadPicture = (data, id) => {
           return axios
             .get(`/api/user/${id}`, { withCredentials: true })
             .then((res) => {
-              console.log("Nouvelle photo de profil récupérée :", res.data.picture);
               dispatch({ type: UPLOAD_PICTURE, payload: res.data.picture });
             });
         }
@@ -183,7 +175,6 @@ export const uploadPicture = (data, id) => {
 export const followUser = (followerId, idToFollow) => {
   followerId = normalizeId(followerId);
   idToFollow = normalizeId(idToFollow);
-  console.log("Demande de suivi utilisateur :", idToFollow, "par :", followerId);
   return (dispatch) => {
     return axios({
       method: "patch",
@@ -192,7 +183,6 @@ export const followUser = (followerId, idToFollow) => {
       withCredentials: true
     })
       .then((res) => {
-        console.log("Réponse suivi utilisateur :", res.data);
         dispatch({ type: FOLLOW_USER, payload: { idToFollow } });
       })
       .catch((err) => {
@@ -205,7 +195,6 @@ export const followUser = (followerId, idToFollow) => {
 export const unfollowUser = (followerId, idToUnfollow) => {
   followerId = normalizeId(followerId);
   idToUnfollow = normalizeId(idToUnfollow);
-  console.log("Demande d'arrêt de suivi utilisateur :", idToUnfollow, "par :", followerId);
   return (dispatch) => {
     return axios({
       method: "patch",
@@ -214,7 +203,6 @@ export const unfollowUser = (followerId, idToUnfollow) => {
       withCredentials: true
     })
       .then((res) => {
-        console.log("Réponse arrêt de suivi utilisateur :", res.data);
         dispatch({ type: UNFOLLOW_USER, payload: { idToUnfollow } });
       })
       .catch((err) => {

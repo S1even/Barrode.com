@@ -61,9 +61,7 @@ const Card = ({ post }) => {
   };
 
   useEffect(() => {
-    console.log("userData from Redux:", userData);
-    console.log("User ID (uid):", uid);
-    console.log("User ID type:", typeof uid);
+
     if (uid === "" && userData) {
       console.log("Structure complète de userData:", JSON.stringify(userData, null, 2));
     }
@@ -77,7 +75,6 @@ const Card = ({ post }) => {
     const postId = normalizeId(post._id);
 
     if (!uid) {
-      console.error("User ID is missing");
       return;
     }
     
@@ -88,20 +85,15 @@ const Card = ({ post }) => {
     });
   
     if (!uid || !postId) {
-      console.error("Missing data:", { uid, postId });
       return;
     }
   
     if (liked) {
-      console.log("Dispatching unlike");
       dispatch(unlikePost(postId, uid))
         .then(() => console.log("Unlike action completed"))
         .catch(err => console.error("Unlike error:", err));
     } else {
-      console.log("Dispatching like");
       dispatch(likePost(postId, uid))
-        .then(() => console.log("Like action completed"))
-        .catch(err => console.error("Like error:", err));
     }
   };
   

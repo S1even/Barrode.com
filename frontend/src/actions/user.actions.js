@@ -109,7 +109,6 @@ export const getUsers = () => {
     return axios
       .get(`/api/user`, { withCredentials: true })
       .then((res) => {
-        console.log("Liste des utilisateurs récupérée :", res.data);
         dispatch({ type: GET_USERS, payload: res.data });
       })
       .catch((err) => {

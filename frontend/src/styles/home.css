@@ -3,7 +3,7 @@
   max-width: 350px;
   height: auto;
   position: relative;
-  left: -55px; /* Position à gauche */
+  left: -55px;
   top: -20px;
   object-fit: contain;
 }
@@ -18,22 +18,22 @@
 
 @media (max-width: 768px) {
   .image-container {
-    padding-left: 90px; /* Décalage réduit sur écrans moyens */
+    padding-left: 90px;
   }
   
   .image-class {
     width: 85%;
-    max-width: 300px; /* Réduit la taille max pour s'adapter aux écrans moyens */
+    max-width: 300px;
   }
 }
 
 @media (max-width: 480px) {
   .image-container {
-    padding-left: 30px; /* Moins de décalage sur petits écrans pour éviter les débordements */
+    padding-left: 30px;
   }
   
   .image-class {
-    width: 90%; /* Augmente la largeur pour mieux voir l'image */
-    max-width: 280px; /* Réduit davantage la taille max */
+    width: 90%;
+    max-width: 280px;
   }
 }

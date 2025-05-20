@@ -207,20 +207,11 @@ export default NewPostForm;
 const PostContainer = styled.div`
   background: white;
   border-radius: 20px;
-  padding: 1.5rem 2rem;
+  padding: 1.5rem 2.5rem;
   margin: 1rem auto;
-  max-width: 800px;
-  width: calc(100% - 32px); /* Pour une meilleure adaptation sur mobile */
+  max-width: 700px;
   color: #001f3f;
   font-family: 'Inter', sans-serif;
-  box-shadow: 0 2px 6px rgba(0, 31, 63, 0.08);
-
-  @media (max-width: 768px) {
-    padding: 1rem;
-    border-radius: 15px;
-    width: calc(100% - 16px);
-    margin: 0.8rem auto;
-  }
 
   .data {
     position: absolute;
@@ -233,32 +224,45 @@ const PostContainer = styled.div`
     }
   }
 
-  .post-container {
+  .map-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
-    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .map-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 800px;
+    width: 90%;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
   }
 
   .user-info img {
-    width: 50px;
-    height: 50px;
-    border-radius: 15px;
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
     object-fit: cover;
     box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
   }
 
   .post-form {
-    flex: 1;
-    width: 100%;
-    
     textarea {
       width: 100%;
       height: 80px;
-      padding: 12px;
+      padding: 10px;
       font-size: 1rem;
       border-radius: 12px;
       border: 1px solid #ddd;
       resize: none;
-      margin-bottom: 0.5rem;
     }
 
     .card-container {
@@ -269,14 +273,9 @@ const PostContainer = styled.div`
       padding: 10px;
 
       .card-left img {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-      }
-
-      .card-right {
-        flex: 1;
-        margin-left: 10px;
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
       }
 
       .card-header {
@@ -286,7 +285,6 @@ const PostContainer = styled.div`
 
         h3 {
           color: #001f3f;
-          margin: 0;
         }
 
         span {
@@ -319,37 +317,31 @@ const PostContainer = styled.div`
       align-items: center;
       margin-top: 1rem;
 
-      @media (max-width: 768px) {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
+      .icon {
+        position: relative;
+        input {
+          opacity: 0;
+          position: absolute;
+          left: -9999px;
+        }
 
-      .icon-group {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+        img {
+          cursor: pointer;
+          width: 24px;
+        }
 
-        .icon {
-          position: relative;
-          
-          svg {
-            transition: transform 0.2s ease;
-          }
-
-          &:hover svg {
-            transform: scale(1.1);
-          }
+        button {
+          background: none;
+          border: none;
+          color: #00bfff;
+          cursor: pointer;
+          font-size: 0.9rem;
         }
       }
 
       .btn-send {
         display: flex;
         gap: 0.5rem;
-
-        @media (max-width: 768px) {
-          align-self: flex-end;
-        }
 
         .cancel {
           background: transparent;
@@ -370,6 +362,21 @@ const PostContainer = styled.div`
 
           &:hover {
             background: #009ddb;
+          }
+        }
+      }
+
+      .icon-group {
+        display: flex;
+        align-items: center;
+
+        .icon {
+          svg {
+            transition: transform 0.2s ease;
+          }
+
+          &:hover svg {
+            transform: scale(1.1);
           }
         }
       }

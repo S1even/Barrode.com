@@ -283,15 +283,14 @@ const StyledCard = styled.li`
   color: #001f3f;
   font-family: 'Inter', sans-serif;
   max-width: 800px;
-  width: calc(100% - 16px);
   overflow: hidden;
   list-style-type: none;
 
-  @media (max-width: 768px) {
-    border-radius: 15px;
-    margin: 0.8rem auto;
-    width: 100%;
-  }
+
+@media (max-width: 768px) {
+  border-radius: 15px;
+  margin: 0.8rem auto;
+}
 `;
 
 const CardContent = styled.div`
@@ -315,7 +314,6 @@ const CardContent = styled.div`
 
   .card-right {
     flex: 1;
-    width: calc(100% - 70px);
 
     .card-header {
       display: flex;
@@ -342,7 +340,6 @@ const CardContent = styled.div`
     p {
       margin: 1rem 0;
       line-height: 1.5;
-      word-break: break-word; /* Évite le débordement de texte */
     }
 
     .update-post {
@@ -357,8 +354,6 @@ const CardContent = styled.div`
 
       .button-container {
         margin-top: 0.5rem;
-        display: flex;
-        justify-content: flex-end;
 
         .btn {
           background: #00bfff;
@@ -392,11 +387,96 @@ const CardContent = styled.div`
       display: flex;
       gap: 1rem;
       margin-top: 0.5rem;
-      justify-content: flex-end;
 
       div {
         cursor: pointer;
       }
     }
+  }
+`;
+
+const CardFooter = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  .comment-icon, .like-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+
+    span {
+      font-size: 0.9rem;
+      color: #666;
+    }
+  }
+
+  img, svg {
+    width: 20px;
+    cursor: pointer;
+  }
+`;
+
+const MapButton = styled.button`
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 8px 0;
+  cursor: pointer;
+  margin-top: 10px;
+  color: #2c3e50;
+  font-size: 14px;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  svg {
+    margin-right: 5px;
+  }
+`;
+
+const CommentsSection = styled.div`
+  border-top: 1px solid #eaeaea;
+  padding: 1rem 1.5rem;
+  background-color: #fafafa;
+`;
+
+const HeartIcon = styled.div`
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+
+  &.not-liked svg {
+    fill: none;
+    stroke: #2c3e50;
+    stroke-width: 1.5;
+  }
+
+  &.liked svg {
+    fill: #e74c3c;
+    stroke: #e74c3c;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
   }
 `;

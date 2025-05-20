@@ -277,18 +277,29 @@ export default Card;
 const StyledCard = styled.li`
   background: #ffffff;
   border-radius: 20px;
-  margin: 1.5rem auto;
+  margin: 1rem auto;
   padding: 0;
   box-shadow: 0 2px 8px rgba(0, 31, 63, 0.1);
   color: #001f3f;
   font-family: 'Inter', sans-serif;
   max-width: 800px;
   overflow: hidden;
+  list-style-type: none;
+
+
+@media (max-width: 768px) {
+  border-radius: 15px;
+  margin: 0.8rem auto;
+}
 `;
 
 const CardContent = styled.div`
   display: flex;
   padding: 1.5rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 
   .card-left {
     margin-right: 1rem;

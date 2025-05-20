@@ -8,29 +8,95 @@ import Card from "../components/Post/Card";
 import FriendsHint from "../components/Profil/FriendsHint";
 import NewPostForm from "../components/Post/NewPostFrom";
 import Thread from "../components/Thread";
+import styled from "styled-components";
 
 const Feed = () => {
   const uid = useContext(UidContext);
   const trendList = useSelector((state) => state.trendingReducer);
 
   return (
-    <div className="feed-page">
-      <div className="home-container">
-        <Navbar />
-        <NewPostForm />
-        <Thread />
-        <ul>
-          {!isEmpty(trendList[0]) && trendList.map((post) => <Card post={post} key={post._id} />)}
-        </ul>
-      </div>
-      <div className="right-side">
+    <FeedContainer className="feed-page">
+      <MainContent className="home-container">
+        <div className="sticky-header">
+          <Navbar />
+          <NewPostForm />
+        </div>
+        <div className="scrollable-content">
+          <Thread />
+          <PostsList>
+            {!isEmpty(trendList[0]) && 
+              trendList.map((post) => (
+                <Card post={post} key={post._id} />
+              ))
+            }
+          </PostsList>
+        </div>
+      </MainContent>
+      <SideContent className="right-side">
         <div className="right-side-container">
           {uid && <FriendsHint />}
         </div>
-      </div>
-    </div>
+      </SideContent>
+    </FeedContainer>
   );
 };
 
+
+const FeedContainer = styled.div`
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
+const MainContent = styled.div`
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  
+  .sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 1rem;
+  }
+  
+  @media (max-width: 768px) {
+    flex: 1;
+    width: 100%;
+  }
+`;
+
+const SideContent = styled.div`
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  border-left: 1px solid #eaeaea;
+  padding: 1rem;
+  
+  @media (max-width: 768px) {
+    display: none; /* Masquer sur mobile pour simplifier */
+  }
+`;
+
+const PostsList = styled.ul`
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+`;
 
 export default Feed;

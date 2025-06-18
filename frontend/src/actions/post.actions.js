@@ -90,7 +90,7 @@ export const addPost = (data) => {
       try {
         console.log("Tentative 1: axios.post avec URL spécifique");
         const res = await axios.post(
-          'https://barrodecom-production.up.railway.app/api/post',
+          'https://barrode-com.onrender.com/api/post',
           postData,
           {
             withCredentials: true,
@@ -118,7 +118,7 @@ export const addPost = (data) => {
           console.log("Tentative 2: axios({...}) avec URL spécifique");
           const res = await axios({
             method: 'post',
-            url: 'https://barrodecom-production.up.railway.app/api/post',
+            url: 'https://barrode-com.onrender.com/api/post',
             data: postData,
             withCredentials: true,
             headers: {

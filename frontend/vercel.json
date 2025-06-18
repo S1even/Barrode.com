@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://barrodecom-production.up.railway.app/api/:path*"
+      "destination": "https://barrode-com.onrender.com/api/:path*"
     }
   ],
   "headers": [
